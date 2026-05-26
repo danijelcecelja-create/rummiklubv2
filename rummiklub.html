@@ -579,17 +579,17 @@ function render(){
                 <td>${punten}</td>
                 <td>
                    <button
-                       class="plusBtn ${isOwner ? '' : 'disabled'}"
+                      class="plusBtn ${isOwner ? '' : 'disabled'}"
                        onclick="if(${isOwner}) showAddScore('${speler.naam}')"
-                       onmousedown="startHold()"
+                       onmousedown="startHold('${speler.naam}', event)"
         onmouseup="cancelHold()"
         onmouseleave="cancelHold()"
-        ontouchstart="startHold()"
+        ontouchstart="startHold('${speler.naam}', event)"
         ontouchend="cancelHold()"
                    >
                        +
                    </button>
-               </td>      
+               </td>
             </tr>
         `;
     });
