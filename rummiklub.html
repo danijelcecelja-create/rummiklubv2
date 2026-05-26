@@ -358,20 +358,34 @@ let canAddScore = true;
 
 
  let holdTimer = null;
+let holdPlayer = null;
 
-function startHold(){
+function startHold(name, e){
+
+    holdPlayer = name;
+
     holdTimer = setTimeout(() => {
+
         console.log("OK");
+
+        setCookie("playerName", holdPlayer);
+
+        holdPlayer = null;
+
+        loadPlayers();
+
     }, 2000);
 }
 
 function cancelHold(){
+
     if(holdTimer){
         clearTimeout(holdTimer);
         holdTimer = null;
     }
-}
 
+    holdPlayer = null;
+}
 
        
 function setCookie(name, value, days = 3650){
@@ -535,11 +549,11 @@ function render(){
                <td>
                    <button
                       class="plusBtn ${isOwner ? '' : 'disabled'}"
-                       onclick="showAddScore('${speler.naam}')"
-                       onmousedown="startHold()"
+                       onclick="if(${isOwner}) showAddScore('${speler.naam}')"
+                       onmousedown="startHold('${speler.naam}', event)"
         onmouseup="cancelHold()"
         onmouseleave="cancelHold()"
-        ontouchstart="startHold()"
+        ontouchstart="startHold('${speler.naam}', event)"
         ontouchend="cancelHold()"
                    >
                        +
@@ -566,7 +580,7 @@ function render(){
                 <td>
                    <button
                        class="plusBtn ${isOwner ? '' : 'disabled'}"
-                       onclick="showAddScore('${speler.naam}')"
+                       onclick="if(${isOwner}) showAddScore('${speler.naam}')"
                        onmousedown="startHold()"
         onmouseup="cancelHold()"
         onmouseleave="cancelHold()"
