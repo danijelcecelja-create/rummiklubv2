@@ -1,0 +1,694 @@
+
+<!--
+
+TODO:
+
+-cookie lock
+ 
+-->
+<!DOCTYPE html> 
+<html lang="nl">
+   <head> 
+      <meta charset="UTF-8"> 
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Rummiklub</title>
+      <link rel="icon" type="image/jpeg" href="https://raw.githubusercontent.com/danijelcecelja-create/rummiklub/main/joker.jpg">
+      <style>
+         body{
+         margin:0;
+         font-family:Arial, sans-serif;
+         background:#fff;
+         color:#111;
+         }
+
+         .header{
+             width:100%;
+             display:flex;
+             justify-content:center;
+             align-items:center;
+             padding:20px 0;
+             box-sizing:border-box;
+         }
+         
+         .header a{
+             display:flex;
+             justify-content:center;
+             width:100%;
+         }
+         
+         .header img{
+             width:100%;
+             max-width:420px;
+             height:auto;
+             display:block;
+         }
+         
+         .container{
+         width:100%;
+         max-width:900px;
+         margin:0 auto;
+         padding:20px;
+         box-sizing:border-box;
+         }
+         table{
+         width:100%;
+         border-collapse:collapse;
+         margin-bottom:30px;
+         }
+         th,
+         td{
+         padding:14px 10px;
+         border-bottom:1px solid #ddd;
+         text-align:center;
+         font-size:17px;
+         }
+         table th:first-child,
+         table td:first-child{
+         text-align:left;
+         }
+         th{
+         font-weight:bold;
+         background:#f5f5f5;
+         }
+         .score{
+         font-weight:bold;
+         }
+         .plusBtn{
+             width:30px;
+             height:30px;
+             border-radius:999px;
+             border:none;
+             background:#111;
+             color:#fff;
+             font-size:21px;
+             cursor:pointer;
+             box-shadow:0 4px 8px rgba(0,0,0,0.25);
+         }
+         .plusBtn:hover{
+             opacity:0.5;
+             box-shadow:0 6px 12px rgba(0,0,0,0.3);
+         }
+
+         .plusBtn.disabled{
+             background:#bbb !important;
+             opacity:0.5 !important;
+             cursor:not-allowed !important;
+             pointer-events:none !important;
+             box-shadow:none !important;
+         }
+         
+         .addPlayerBtn{
+             width:60px;
+             height:60px;
+             border-radius:50%;
+             border:2px solid grey;
+             padding:0;
+             overflow:hidden;
+             cursor:pointer;
+             background:transparent;
+             box-shadow:0 5px 12px rgba(0,0,0,0.2);
+         }
+         .addPlayerBtn:hover{
+             opacity:0.4;
+             box-shadow:0 8px 16px rgba(0,0,0,0.25);
+         }
+         .addPlayerBtn img{
+         width:100%;
+         height:100%;
+         object-fit:cover;
+         display:block;
+         }
+         .bottomAdd{
+         display:flex;
+         justify-content:center;
+         margin-top:25px;
+         }
+         dialog{
+         border:none;
+         border-radius:12px;
+         padding:16px;
+         width:260px;
+         max-width:85vw;
+         box-sizing:border-box;
+         }
+         
+         dialog h3{
+         margin-top:0;
+         margin-bottom:12px;
+         font-size:18px;
+         }
+         
+         input{
+         width:100%;
+         box-sizing:border-box;
+         padding:10px;
+         margin-top:8px;
+         margin-bottom:12px;
+         border-radius:8px;
+         border:1px solid #ddd;
+         font-size:15px;
+         }
+         .modalButtons{
+         display:flex;
+         justify-content:flex-end;
+         gap:10px;
+         }
+         .modalButtons button{
+         padding:10px 14px;
+         border:none;
+         border-radius:8px;
+         cursor:pointer;
+         }
+         .saveBtn{
+         background:#111;
+         color:#fff;
+         min-width:90px;
+         height:40px;
+         display:flex;
+         align-items:center;
+         justify-content:center;
+         position:relative;
+         }
+         .loader{
+         position:fixed;
+         top:0;
+         left:0;
+         width:100%;
+         height:100%;
+         background:rgba(255,255,255,0.8);
+         display:flex;
+         align-items:center;
+         justify-content:center;
+         z-index:9999;
+         }
+         .spinner{
+         width:50px;
+         height:50px;
+         border:6px solid #ddd;
+         border-top:6px solid #111;
+         border-radius:50%;
+         animation:spin 1s linear infinite;
+         }
+         @keyframes spin{
+         0%{transform:rotate(0deg);}
+         100%{transform:rotate(360deg);}
+         }
+         .rulesTable{
+         width:100%;
+         border-collapse:collapse;
+         margin-bottom:30px;
+         }
+         .rulesTable td{
+         padding:0;
+         border:none;
+         text-align:left;
+         font-size:16px;
+         line-height:1.5;
+         }
+         .rulesBox{
+         padding:10px 5px;
+         }
+         @media (max-width:600px){
+         th,
+         td{
+         font-size:14px;
+         padding:10px 6px;
+         }
+         .plusBtn{
+         width:26px;
+         height:26px;
+         font-size:18px;
+         }
+         .addPlayerBtn{
+         width:52px;
+         height:52px;
+         }
+         .rulesTable td{
+         font-size:14px;
+         }
+         }
+         .btnLoading{
+         position:relative;
+         pointer-events:none;
+         opacity:0.7;
+         }
+         .btnSpinner{
+         width:16px;
+         height:16px;
+         border:2px solid #ddd;
+         border-top:2px solid #111;
+         border-radius:50%;
+         animation:spin 0.8s linear infinite;
+         position:absolute;
+         }
+      </style>
+   </head>
+   <body>
+      <div id="loader" class="loader">
+         <div class="spinner"></div>
+      </div>
+      <div class="header">
+         <a href="https://github.com/danijelcecelja-create/rummiklub" target="_blank">
+         <img src="https://raw.githubusercontent.com/danijelcecelja-svg/rummiklub/main/Rummiklub.jpeg" />
+         </a>
+      </div>
+      <!--
+         -->
+      <div class="container">
+         <table id="mainTable">
+             <thead>
+                 <tr>
+                     <th colspan="5">
+                     <a href="https://docs.google.com/spreadsheets/d/1Cw5FMRrK79X1auXMcEc8jNpZ5bhCLZAv7GrfHNJsQ1Q/edit?gid=102158768#gid=102158768"
+                        target="_blank"
+                        style="color:inherit; text-decoration:none;">
+                     Leden
+                     </a>
+                     
+                     </th>
+                 </tr>
+                 <tr id="membersHeaderRow"></tr>
+             </thead>
+             <tbody id="rankingMain"></tbody>
+         </table>
+         
+         <table id="secondaryTable">
+             <thead>
+                 <tr>
+                    
+                    <th colspan="5">
+                     <a href="https://docs.google.com/spreadsheets/d/1Cw5FMRrK79X1auXMcEc8jNpZ5bhCLZAv7GrfHNJsQ1Q/edit?gid=102158768#gid=102158768"
+                        target="_blank"
+                        style="color:inherit; text-decoration:none;">
+                     Gasten
+                     </a>
+                     
+                     </th>
+                 </tr>
+                 <tr id="guestsHeaderRow"></tr>
+             </thead>
+             <tbody id="rankingSecondary"></tbody>
+         </table>
+         <div class="bottomAdd">
+            <button class="addPlayerBtn" onclick="showAddPlayer()">
+            <img src="https://raw.githubusercontent.com/danijelcecelja-create/rummiklub/main/joker.jpg" alt="Speler toevoegen">
+            </button>
+         </div>
+         <br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/>
+         <table class="rulesTable">
+            <tr>
+               <td>
+                  <div class="rulesBox">
+                     <h2>Welkom bij Rummiklub!</h2>
+                     <p>
+                        Het doel is om de speler te zijn met de laagste score.
+                     </p>
+                     <p><strong>Score = Punten ÷ Beurten</strong></p>
+                     <br/><br/>
+                     <h3>Spelregels</h3>
+                     <ul>
+                        <li>Elke speler start met 14 tegels</li>
+                        <li>Maak sets 3-<span style="color:blue">3</span>-<span style="color:red">3</span> of reeksen 1-2-3</li>
+                        <li>Eerste zet moet minstens 30 punten zijn</li>
+                        <li>Klop 2 keer op tafel met de hand om je beurt af te suiten</li>
+                        <li>Na het openen mogen tegels worden herschikt</li>
+                        <li>Eerste speler zonder tegels wint</li>
+                        <li>Tel je tegels op aan het einde en geef ze in</li>
+                        <li><b>Joker = 30 punten</b></li>
+                        <li>Consistentie is belangrijker dan geluk</li>
+                        <li>Na 3 beurten wordt je lid</li>
+                        <li>Een beetje zagen mag, maar niet teveel</li>
+                        <br/><br/>
+                        <a href="https://rummikub.com/wp-content/uploads/2019/12/2600-English-1.pdf"
+                           target="_blank"
+                           rel="noopener noreferrer">
+                            alle spelregels
+                        </a>
+                     </ul>
+                  </div>
+               </td>
+            </tr>
+         </table>
+      </div>
+      <dialog id="scoreDialog">
+         <h3>Punten toevoegen</h3>
+         <input type="number" id="scoreInput" placeholder="Punten">
+         <div class="modalButtons">
+            <button onclick="closeDialogs()">Annuleren</button>
+            <button class="saveBtn" onclick="saveScore()">Opslaan</button>
+         </div>
+      </dialog>
+      <dialog id="playerDialog">
+         <h3>Nieuwe speler</h3>
+         <input type="text" id="playerNameInput" placeholder="Naam">
+         <input type="number" id="playerScoreInput" placeholder="Punten">
+         <div class="modalButtons">
+            <button onclick="closeDialogs()">Annuleren</button>
+            <button class="saveBtn" onclick="savePlayer()">Opslaan</button>
+         </div>
+      </dialog>
+      <script>
+        const apiUrl = "https://script.google.com/macros/s/AKfycbwi_PdOKLs0JzIPspPLX7230lgJv9AvmEQCHhSELMl-aUm1vNNwS2B3hEAgjCYwjRcpNA/exec";
+
+let members = [];
+let guests = [];
+let membersHeaders = [];
+let guestsHeaders = [];
+let geselecteerdeSpeler = null;
+let canAddScore = false;
+
+console.log("HELLooooO");
+
+function setCookie(name, value, days = 3650){
+    const d = new Date();
+    d.setTime(d.getTime() + days*24*60*60*1000);
+    document.cookie = `${name}=${encodeURIComponent(value)}; expires=${d.toUTCString()}; path=/`;
+}
+
+function getCookie(name){
+    return document.cookie
+        .split("; ")
+        .find(r => r.startsWith(name + "="))
+        ?.split("=")[1] ? decodeURIComponent(document.cookie.split("; ").find(r => r.startsWith(name + "=")).split("=")[1]) : null;
+}
+
+function cleanPlayerName(name){
+
+    if(!name) return "";
+
+    name = name.trim().toLowerCase();
+
+    return name
+        .split(" ")
+        .filter(Boolean)
+        .map(p => p.charAt(0).toUpperCase() + p.slice(1))
+        .join(" ");
+}
+
+function formatTimestamp(d){
+
+    const pad = n => String(n).padStart(2, "0");
+
+    const day = pad(d.getDate());
+    const month = pad(d.getMonth() + 1);
+    const year = d.getFullYear();
+
+    const hours = pad(d.getHours());
+    const minutes = pad(d.getMinutes());
+    const seconds = pad(d.getSeconds());
+
+    return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
+}
+
+         
+
+async function readSheet(sheetName){
+
+    const url = `${apiUrl}?action=readTable&sheetName=${sheetName}`;
+    console.log("FeeeeeETCH:", url);
+
+    const response = await fetch(url);
+    const data = await response.json();
+
+    console.log(`RAW ${sheetName}:`, data);
+
+    return data;
+}
+
+async function loadPlayers(){
+
+    document.getElementById("loader").style.display = "flex";
+
+    try{
+
+        const [membersRaw, guestsRaw] = await Promise.all([
+            readSheet("Members"),
+            readSheet("Guests")
+        ]);
+
+        const extract = (data) => {
+            if(!Array.isArray(data) || data.length === 0){
+                return { headers: [], rows: [] };
+            }
+
+            return {
+                headers: data[0],
+                rows: data.slice(1)
+            };
+        };
+
+        const membersSplit = extract(membersRaw);
+        const guestsSplit = extract(guestsRaw);
+
+        membersHeaders = membersSplit.headers;
+        guestsHeaders = guestsSplit.headers;
+
+        const mapRow = r => ({
+            naam: r[0],
+            score: Number(r[1]) || 0,
+            spellen: Number(r[2]) || 0,
+            punten: Number(r[3]) || 0,
+            last: r[4]
+        });
+
+        members = membersSplit.rows
+            .filter(r => r && r[0])
+            .map(mapRow);
+
+        guests = guestsSplit.rows
+            .filter(r => r && r[0])
+            .map(mapRow);
+
+        console.log("MEMBERS:", members);
+        console.log("GUESTS:", guests);
+
+        render();
+    }
+    catch(err){
+        console.error("LOAD ERROR:", err);
+    }
+    finally{
+        document.getElementById("loader").style.display = "none";
+    }
+}
+
+function render(){
+
+    const main = document.getElementById("rankingMain");
+    const secondary = document.getElementById("rankingSecondary");
+
+    main.innerHTML = "";
+    secondary.innerHTML = "";
+
+    const membersHeaderRow = document.getElementById("membersHeaderRow");
+    const guestsHeaderRow = document.getElementById("guestsHeaderRow");
+
+    if(membersHeaders.length){
+        membersHeaderRow.innerHTML = `
+            <th>${membersHeaders[0] ?? ""}</th>
+            <th>${membersHeaders[1] ?? ""}</th>
+            <th>${membersHeaders[2] ?? ""}</th>
+            <th>${membersHeaders[3] ?? ""}</th>
+            <th></th>
+        `;
+    }
+
+    if(guestsHeaders.length){
+        guestsHeaderRow.innerHTML = `
+            <th>${guestsHeaders[0] ?? ""}</th>
+            <th>${guestsHeaders[1] ?? ""}</th>
+            <th>${guestsHeaders[2] ?? ""}</th>
+            <th>${guestsHeaders[3] ?? ""}</th>
+            <th></th>
+        `;
+    }
+
+    members.forEach(speler => {
+
+        const spellen = Number(speler.spellen) || 0;
+        const punten = Number(speler.punten) || 0;
+        const score = spellen > 0 ? Number((punten / spellen).toFixed(1)) : 0;
+
+        main.innerHTML += `
+            <tr>
+                <td>${speler.naam}</td>
+                <td><b>${score}</b></td>
+                <td>${spellen}</td>
+                <td>${punten}</td>
+               <td>
+                   <button
+                       class="plusBtn ${canAddScore ? '' : 'disabled'}"
+                       onclick="showAddScore('${speler.naam}')"
+                   >
+                       +
+                   </button>
+               </td>
+            </tr>
+        `;
+    });
+
+    guests.forEach(speler => {
+
+        const spellen = Number(speler.spellen) || 0;
+        const punten = Number(speler.punten) || 0;
+        const score = spellen > 0 ? Number((punten / spellen).toFixed(1)) : 0;
+
+        secondary.innerHTML += `
+            <tr>
+                <td>${speler.naam}</td>
+                <td><b>${score}</b></td>
+                <td>${spellen}</td>
+                <td>${punten}</td>
+                <td>
+                   <button
+                       class="plusBtn ${canAddScore ? '' : 'disabled'}"
+                       onclick="showAddScore('${speler.naam}')"
+                   >
+                       +
+                   </button>
+               </td>      
+            </tr>
+        `;
+    });
+
+    document.getElementById("mainTable").style.display =
+        members.length ? "table" : "none";
+
+    document.getElementById("secondaryTable").style.display =
+        guests.length ? "table" : "none";
+}
+
+function showAddScore(naam){
+    geselecteerdeSpeler = naam;
+    document.getElementById("scoreInput").value = "";
+    document.getElementById("scoreDialog").showModal();
+}
+
+function showAddPlayer(){
+    document.getElementById("playerNameInput").value = "";
+    document.getElementById("playerScoreInput").value = "";
+    document.getElementById("playerDialog").showModal();
+}
+
+function closeDialogs(){
+    document.getElementById("scoreDialog").close();
+    document.getElementById("playerDialog").close();
+}
+
+async function saveScore(){
+
+    const btn = document.querySelector("#scoreDialog .saveBtn");
+    btn.disabled = true;
+    btn.classList.add("btnLoading");
+    btn.innerHTML = `<span class="btnSpinner"></span>`;
+
+    try{
+
+        const input = document.getElementById("scoreInput").value;
+        const punten = Number(input);
+
+        if(Number.isNaN(punten) || input === ""){
+            alert("Voer punten in");
+            return;
+        }
+
+        const timestamp = formatTimestamp(new Date());
+
+        await fetch(apiUrl, {
+            method: "POST",
+            body: JSON.stringify({
+                action: "addRow",
+                sheetName: "GameTable",
+                data: [
+                    `${geselecteerdeSpeler}-${timestamp}`,
+                    geselecteerdeSpeler,
+                    timestamp,
+                    punten
+                ]
+            })
+        });
+
+        closeDialogs();
+        loadPlayers();
+
+    }
+    catch(err){
+        console.error("SAVE SCORE ERROR:", err);
+    }
+    finally{
+        setTimeout(() => {
+            btn.disabled = false;
+            btn.classList.remove("btnLoading");
+            btn.innerHTML = "Opslaan";
+        }, 10000);
+    }
+}
+
+async function savePlayer(){
+
+    const btn = document.querySelector("#playerDialog .saveBtn");
+    btn.disabled = true;
+    btn.classList.add("btnLoading");
+    btn.innerHTML = `<span class="btnSpinner"></span>`;
+
+    try{
+
+        const naam = cleanPlayerName(document.getElementById("playerNameInput").value);
+        const punten = Number(document.getElementById("playerScoreInput").value) || 0;
+
+        if(!naam){
+            alert("Voer naam in");
+            return;
+        }
+
+        if([...members, ...guests].some(x => x.naam.toLowerCase() === naam.toLowerCase())){
+            alert("Speler bestaat al");
+            return;
+        }
+
+        const timestamp = formatTimestamp(new Date());
+
+        await fetch(apiUrl, {
+            method: "POST",
+            body: JSON.stringify({
+                action: "addRow",
+                sheetName: "PlayerTable",
+                data: [naam]
+            })
+        });
+
+        await fetch(apiUrl, {
+            method: "POST",
+            body: JSON.stringify({
+                action: "addRow",
+                sheetName: "GameTable",
+                data: [
+                    `${naam}-${timestamp}`,
+                    naam,
+                    timestamp,
+                    punten
+                ]
+            })
+        });
+
+        closeDialogs();
+        loadPlayers();
+
+    }
+    catch(err){
+        console.error("SAVE PLAYER ERROR:", err);
+    }
+    finally{
+        setTimeout(() => {
+            btn.disabled = false;
+            btn.classList.remove("btnLoading");
+            btn.innerHTML = "Opslaan";
+        }, 10000);
+    }
+}
+
+loadPlayers();
+         
+      </script>
+   </body>
+</html>
