@@ -90,12 +90,11 @@ v2
          }
 
          .plusBtn.disabled{
-             background:#bbb !important;
-             opacity:0.5 !important;
-             cursor:not-allowed !important;
-             pointer-events:none !important;
-             box-shadow:none !important;
-         }
+              background:#bbb !important;
+              opacity:0.5 !important;
+              cursor:not-allowed !important;
+              box-shadow:none !important;
+          }
          
          .addPlayerBtn{
              width:60px;
@@ -357,8 +356,25 @@ let guestsHeaders = [];
 let geselecteerdeSpeler = null;
 let canAddScore = false;
 
-console.log("HELLooooO");
 
+
+ let holdTimer = null;
+
+function startHold(){
+    holdTimer = setTimeout(() => {
+        console.log("OK");
+    }, 2000);
+}
+
+function cancelHold(){
+    if(holdTimer){
+        clearTimeout(holdTimer);
+        holdTimer = null;
+    }
+}
+
+
+       
 function setCookie(name, value, days = 3650){
     const d = new Date();
     d.setTime(d.getTime() + days*24*60*60*1000);
@@ -405,7 +421,7 @@ function formatTimestamp(d){
 async function readSheet(sheetName){
 
     const url = `${apiUrl}?action=readTable&sheetName=${sheetName}`;
-    console.log("FeeeeeETCH:", url);
+    console.log("FETCH:", url);
 
     const response = await fetch(url);
     const data = await response.json();
@@ -519,6 +535,11 @@ function render(){
                    <button
                        class="plusBtn ${canAddScore ? '' : 'disabled'}"
                        onclick="showAddScore('${speler.naam}')"
+                       onmousedown="startHold()"
+        onmouseup="cancelHold()"
+        onmouseleave="cancelHold()"
+        ontouchstart="startHold()"
+        ontouchend="cancelHold()"
                    >
                        +
                    </button>
@@ -543,6 +564,11 @@ function render(){
                    <button
                        class="plusBtn ${canAddScore ? '' : 'disabled'}"
                        onclick="showAddScore('${speler.naam}')"
+                       onmousedown="startHold()"
+        onmouseup="cancelHold()"
+        onmouseleave="cancelHold()"
+        ontouchstart="startHold()"
+        ontouchend="cancelHold()"
                    >
                        +
                    </button>
