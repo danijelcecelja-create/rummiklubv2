@@ -357,10 +357,10 @@ let canAddScore = true;
 
 
 
- let holdTimer = null;
+let holdTimer = null;
 let holdPlayer = null;
 
-function startHold(name, e){
+function startHold(name){
 
     holdPlayer = name;
 
@@ -372,7 +372,7 @@ function startHold(name, e){
 
         holdPlayer = null;
 
-        loadPlayers();
+        render();
 
     }, 2000);
 }
