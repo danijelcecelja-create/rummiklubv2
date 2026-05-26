@@ -714,7 +714,11 @@ async function savePlayer(){
             })
         });
 
+        setCookie("playerName", naam);
+        
         closeDialogs();
+
+       
         loadPlayers();
 
     }
