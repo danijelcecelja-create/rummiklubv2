@@ -1,13 +1,12 @@
 //https://beautifier.io/
 
-
-window.showAddScore = showAddScore
-window.startHold = startHold
-window.cancelHold = cancelHold
-window.saveScore = saveScore
-window.savePlayer = savePlayer
-window.showAddPlayer = showAddPlayer
-window.closeDialogs = closeDialogs
+window.showAddScore = showAddScore;
+window.startHold = startHold;
+window.cancelHold = cancelHold;
+window.saveScore = saveScore;
+window.savePlayer = savePlayer;
+window.showAddPlayer = showAddPlayer;
+window.closeDialogs = closeDialogs;
 
 const apiUrl = "https://script.google.com/macros/s/AKfycbwi_PdOKLs0JzIPspPLX7230lgJv9AvmEQCHhSELMl-aUm1vNNwS2B3hEAgjCYwjRcpNA/exec";
 
@@ -15,36 +14,26 @@ let members = [];
 let guests = [];
 let membersHeaders = [];
 let guestsHeaders = [];
-let geselecteerdeSpeler = null;
+let selectedPlayer = null;
 let memberTurns = "";
-
-
 
 let holdTimer = null;
 let holdPlayer = null;
 
 function startHold(name)
 {
-
     holdPlayer = name;
 
     holdTimer = setTimeout(() =>
     {
-
-
-
         setCookie("playerName", holdPlayer);
-
         holdPlayer = null;
-
         render();
-
-    }, 500);
+    }, 400);
 }
 
 function cancelHold()
 {
-
     if (holdTimer)
     {
         clearTimeout(holdTimer);
@@ -53,7 +42,6 @@ function cancelHold()
 
     holdPlayer = null;
 }
-
 
 function setCookie(name, value, days = 3650)
 {
@@ -64,20 +52,22 @@ function setCookie(name, value, days = 3650)
 
 function getCookie(name)
 {
-    return document.cookie
+    const match = document.cookie
         .split("; ")
-        .find(r => r.startsWith(name + "="))
-        ?.split("=")[1] ? decodeURIComponent(document.cookie.split("; ").find(r => r.startsWith(name + "=")).split("=")[1]) : null;
+        .find(r => r.startsWith(name + "="));
+
+    if (!match) return null;
+
+    return decodeURIComponent(match.split("=")[1]);
 }
 
 function cleanPlayerName(name)
 {
-
     if (!name) return "";
 
-    name = name.trim().toLowerCase();
-
     return name
+        .trim()
+        .toLowerCase()
         .split(" ")
         .filter(Boolean)
         .map(p => p.charAt(0).toUpperCase() + p.slice(1))
@@ -86,58 +76,45 @@ function cleanPlayerName(name)
 
 function formatTimestamp(d)
 {
-
     const pad = n => String(n).padStart(2, "0");
 
-    const day = pad(d.getDate());
-    const month = pad(d.getMonth() + 1);
-    const year = d.getFullYear();
-
-    const hours = pad(d.getHours());
-    const minutes = pad(d.getMinutes());
-    const seconds = pad(d.getSeconds());
-
-    return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
+    return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
 }
 
-
+async function apiPost(payload)
+{
+    return fetch(apiUrl,
+    {
+        method: "POST",
+        body: JSON.stringify(payload)
+    });
+}
 
 async function readSheet(sheetName)
 {
-
     const url = `${apiUrl}?action=readTable&sheetName=${sheetName}`;
-    console.log("FETCH:", url);
 
     const response = await fetch(url);
-    const data = await response.json();
-
-    console.log(`RAW ${sheetName}:`, data);
-
-    return data;
+    return response.json();
 }
 
 async function loadPlayers()
 {
-
     document.getElementById("loader").style.display = "flex";
 
     try
     {
-
         const [membersRaw, guestsRaw, paramsRaw] = await Promise.all([
             readSheet("Members"),
             readSheet("Guests"),
             readSheet("Params")
         ]);
 
-        const extract = (data) =>
+        const extract = data =>
         {
             if (!Array.isArray(data) || data.length === 0)
             {
-                return {
-                    headers: [],
-                    rows: []
-                };
+                return { headers: [], rows: [] };
             }
 
             return {
@@ -152,8 +129,8 @@ async function loadPlayers()
         membersHeaders = membersSplit.headers;
         guestsHeaders = guestsSplit.headers;
 
-        const mapRow = r => (
-        {
+        const mapRow = r =>
+        ({
             naam: r[0],
             score: Number(r[1]) || 0,
             spellen: Number(r[2]) || 0,
@@ -161,24 +138,12 @@ async function loadPlayers()
             last: r[4]
         });
 
-        members = membersSplit.rows
-            .filter(r => r && r[0])
-            .map(mapRow);
-
-        guests = guestsSplit.rows
-            .filter(r => r && r[0])
-            .map(mapRow);
+        members = membersSplit.rows.filter(r => r && r[0]).map(mapRow);
+        guests = guestsSplit.rows.filter(r => r && r[0]).map(mapRow);
 
         memberTurns = paramsRaw?.[0]?.[1] || "";
 
-        console.log("MEMBERS:", members);
-        console.log("GUESTS:", guests);
-
         render();
-    }
-    catch (err)
-    {
-        console.error("LOAD ERROR:", err);
     }
     finally
     {
@@ -188,14 +153,13 @@ async function loadPlayers()
 
 function render()
 {
-
     const main = document.getElementById("rankingMain");
     const secondary = document.getElementById("rankingSecondary");
 
     const membersHeaderRow = document.getElementById("membersHeaderRow");
     const guestsHeaderRow = document.getElementById("guestsHeaderRow");
 
-    const currentPlayer = decodeURIComponent(getCookie("playerName") || "");
+    const currentPlayer = getCookie("playerName") || "";
 
     main.innerHTML = "";
     secondary.innerHTML = "";
@@ -224,14 +188,12 @@ function render()
 
     document.getElementById("memberTurnsText").textContent = memberTurns;
 
-    function renderRows(players, target)
+    const renderRows = (players, target) =>
     {
-
         let html = "";
 
         players.forEach(speler =>
         {
-
             const isOwner = speler.naam === currentPlayer;
 
             html += `
@@ -242,7 +204,7 @@ function render()
                     <td>${speler.punten}</td>
                     <td>
                         <button
-                            class="plusBtn ${isOwner ? '' : 'disabled'}"
+                            class="plusBtn ${isOwner ? "" : "disabled"}"
                             onclick="if(${isOwner}) showAddScore('${speler.naam}')"
                             onmousedown="startHold('${speler.naam}', event)"
                             onmouseup="cancelHold()"
@@ -250,7 +212,7 @@ function render()
                             ontouchstart="startHold('${speler.naam}', event)"
                             ontouchend="cancelHold()"
                         >
-                            ${isOwner ? '+' : '-'}
+                            ${isOwner ? "+" : "-"}
                         </button>
                     </td>
                 </tr>
@@ -258,21 +220,18 @@ function render()
         });
 
         target.innerHTML = html;
-    }
+    };
 
     renderRows(members, main);
     renderRows(guests, secondary);
 
-    document.getElementById("mainTable").style.display =
-        members.length ? "table" : "none";
-
-    document.getElementById("secondaryTable").style.display =
-        guests.length ? "table" : "none";
+    document.getElementById("mainTable").style.display = members.length ? "table" : "none";
+    document.getElementById("secondaryTable").style.display = guests.length ? "table" : "none";
 }
 
 function showAddScore(naam)
 {
-    geselecteerdeSpeler = naam;
+    selectedPlayer = naam;
     document.getElementById("scoreInput").value = "";
     document.getElementById("scoreDialog").showModal();
 }
@@ -292,23 +251,18 @@ function closeDialogs()
 
 async function saveScore()
 {
-
     const btn = document.querySelector("#scoreDialog .saveBtn");
+
     btn.disabled = true;
     btn.classList.add("btnLoading");
     btn.innerHTML = `<span class="btnSpinner"></span>`;
 
     try
     {
-
         const input = document.getElementById("scoreInput").value;
         const punten = Number(input);
 
-        if (
-            input === "" ||
-            Number.isNaN(punten) ||
-            !Number.isInteger(punten)
-        )
+        if (input === "" || !Number.isInteger(punten))
         {
             alert("Voer een geheel getal in");
             return;
@@ -316,29 +270,20 @@ async function saveScore()
 
         const timestamp = formatTimestamp(new Date());
 
-        await fetch(apiUrl,
+        await apiPost(
         {
-            method: "POST",
-            body: JSON.stringify(
-            {
-                action: "addRow",
-                sheetName: "GameTable",
-                data: [
-                    `${geselecteerdeSpeler}-${timestamp}`,
-                    geselecteerdeSpeler,
-                    timestamp,
-                    punten
-                ]
-            })
+            action: "addRow",
+            sheetName: "GameTable",
+            data: [
+                `${selectedPlayer}-${timestamp}`,
+                selectedPlayer,
+                timestamp,
+                punten
+            ]
         });
 
         closeDialogs();
         loadPlayers();
-
-    }
-    catch (err)
-    {
-        console.error("SAVE SCORE ERROR:", err);
     }
     finally
     {
@@ -353,28 +298,21 @@ async function saveScore()
 
 async function savePlayer()
 {
-
     const btn = document.querySelector("#playerDialog .saveBtn");
+
     btn.disabled = true;
     btn.classList.add("btnLoading");
     btn.innerHTML = `<span class="btnSpinner"></span>`;
 
     try
     {
-
         const naam = cleanPlayerName(document.getElementById("playerNameInput").value);
         const puntenInput = document.getElementById("playerScoreInput").value;
         const punten = puntenInput === "" ? 0 : Number(puntenInput);
 
-        if (!Number.isInteger(punten))
+        if (!naam || !Number.isInteger(punten))
         {
-            alert("Voer een geheel getal in");
-            return;
-        }
-
-        if (!naam)
-        {
-            alert("Voer naam in");
+            alert("Ongeldige invoer");
             return;
         }
 
@@ -386,44 +324,29 @@ async function savePlayer()
 
         const timestamp = formatTimestamp(new Date());
 
-        await fetch(apiUrl,
+        await apiPost(
         {
-            method: "POST",
-            body: JSON.stringify(
-            {
-                action: "addRow",
-                sheetName: "PlayerTable",
-                data: [naam]
-            })
+            action: "addRow",
+            sheetName: "PlayerTable",
+            data: [naam]
         });
 
-        await fetch(apiUrl,
+        await apiPost(
         {
-            method: "POST",
-            body: JSON.stringify(
-            {
-                action: "addRow",
-                sheetName: "GameTable",
-                data: [
-                    `${naam}-${timestamp}`,
-                    naam,
-                    timestamp,
-                    punten
-                ]
-            })
+            action: "addRow",
+            sheetName: "GameTable",
+            data: [
+                `${naam}-${timestamp}`,
+                naam,
+                timestamp,
+                punten
+            ]
         });
 
         setCookie("playerName", naam);
 
         closeDialogs();
-
-
         loadPlayers();
-
-    }
-    catch (err)
-    {
-        console.error("SAVE PLAYER ERROR:", err);
     }
     finally
     {
