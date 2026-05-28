@@ -304,7 +304,7 @@
                         <li>Tel je tegels op aan het einde en geef ze in</li>
                         <li><b>Joker = 30 punten</b></li>
                         <li>Consistentie is belangrijker dan geluk</li>
-                        <li>Na 3 beurten wordt je lid</li>
+                        <li>Na <span id="memberTurnsText">2</span> beurten wordt je lid</li>
                         <li>Een beetje zagen mag, maar niet teveel</li>
                         <br/><br/>
                         <a href="https://rummikub.com/wp-content/uploads/2019/12/2600-English-1.pdf"
@@ -344,6 +344,7 @@
          let guestsHeaders = [];
          let geselecteerdeSpeler = null;
          let canAddScore = true;
+         let memberTurns = "";
          
          
          
@@ -442,7 +443,8 @@
          
          const [membersRaw, guestsRaw] = await Promise.all([
              readSheet("Members"),
-             readSheet("Guests")
+             readSheet("Guests"),
+             readSheet("Params")
          ]);
          
          const extract = (data) => {
@@ -477,6 +479,8 @@
          guests = guestsSplit.rows
              .filter(r => r && r[0])
              .map(mapRow);
+
+         memberTurns = paramsRaw?.[0]?.[1] || "";
          
          console.log("MEMBERS:", members);
          console.log("GUESTS:", guests);
@@ -529,6 +533,8 @@
          const score = spellen > 0 ? Number((punten / spellen).toFixed(1)) : 0;
          
          const isOwner = speler.naam === decodeURIComponent(getCookie("playerName") || "");
+         document.getElementById("memberTurnsText").innerHTML =
+          `${memberTurns}`;
          
          main.innerHTML += `
              <tr>
