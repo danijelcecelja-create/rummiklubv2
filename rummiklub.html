@@ -320,7 +320,7 @@
       </div>
       <dialog id="scoreDialog">
          <h3>Punten toevoegen</h3>
-         <input type="number" id="scoreInput" placeholder="Punten">
+         <input type="number" id="scoreInput" placeholder="Punten" step="1">
          <div class="modalButtons">
             <button onclick="closeDialogs()">Annuleren</button>
             <button class="saveBtn" onclick="saveScore()">Opslaan</button>
@@ -329,7 +329,7 @@
       <dialog id="playerDialog">
          <h3>Nieuwe speler</h3>
          <input type="text" id="playerNameInput" placeholder="Naam">
-         <input type="number" id="playerScoreInput" placeholder="Punten">
+         <input type="number" id="playerScoreInput" placeholder="Punten" step="1">
          <div class="modalButtons">
             <button onclick="closeDialogs()">Annuleren</button>
             <button class="saveBtn" onclick="savePlayer()">Opslaan</button>
