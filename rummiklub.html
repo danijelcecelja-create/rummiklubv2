@@ -6,6 +6,25 @@
       <title>Rummiklub</title>
       <link rel="icon" type="image/jpeg" href="https://raw.githubusercontent.com/danijelcecelja-create/rummiklubv2/main/joker.jpg">
       <style>
+         .tooltip{
+             position:absolute;
+             top:-35px;
+             left:50%;
+             transform:translateX(-50%);
+             background:#111;
+             color:#fff;
+             padding:6px 10px;
+             border-radius:8px;
+             font-size:12px;
+             white-space:nowrap;
+             opacity:0;
+             transition:opacity 0.3s ease;
+             pointer-events:none;
+         }
+         
+         .tooltip.show{
+             opacity:1;
+         }
          body{
          margin:0;
          font-family:Arial, sans-serif;
@@ -277,6 +296,7 @@
          </table>
          <div class="bottomAdd">
             <button class="addPlayerBtn" onclick="showAddPlayer()">
+            <span id="addPlayerTooltip" class="tooltip">join!</span>
             <img src="https://raw.githubusercontent.com/danijelcecelja-create/rummiklubv2/main/joker.jpg" alt="Speler toevoegen">
             </button>
          </div>
