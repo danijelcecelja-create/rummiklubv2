@@ -39,7 +39,7 @@ function startHold(name)
 
         render();
 
-    }, 700);
+    }, 500);
 }
 
 function cancelHold()
