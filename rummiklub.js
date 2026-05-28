@@ -260,9 +260,9 @@ async function saveScore()
     try
     {
         const input = document.getElementById("scoreInput").value;
-        const punten = Number(input);
-
-        if (input === "" || !Number.isInteger(punten))
+        const punten = input === "" ? 0 : Number(input);
+        
+        if (!Number.isFinite(punten) || !Number.isInteger(punten))
         {
             alert("Voer een geheel getal in");
             return;
@@ -306,13 +306,12 @@ async function savePlayer()
 
     try
     {
-        const naam = cleanPlayerName(document.getElementById("playerNameInput").value);
         const puntenInput = document.getElementById("playerScoreInput").value;
         const punten = puntenInput === "" ? 0 : Number(puntenInput);
-
-        if (!naam || !Number.isInteger(punten))
+        
+        if (!Number.isFinite(punten) || !Number.isInteger(punten))
         {
-            alert("Ongeldige invoer");
+            alert("Voer een geheel getal in");
             return;
         }
 
