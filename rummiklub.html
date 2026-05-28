@@ -621,8 +621,12 @@
          const input = document.getElementById("scoreInput").value;
          const punten = Number(input);
          
-         if(Number.isNaN(punten) || input === ""){
-             alert("Voer punten in");
+         if(
+             input === "" ||
+             Number.isNaN(punten) ||
+             !Number.isInteger(punten)
+         ){
+             alert("Voer een geheel getal in");
              return;
          }
          
@@ -668,7 +672,13 @@
          try{
          
          const naam = cleanPlayerName(document.getElementById("playerNameInput").value);
-         const punten = Number(document.getElementById("playerScoreInput").value) || 0;
+         const puntenInput = document.getElementById("playerScoreInput").value;
+         const punten = puntenInput === "" ? 0 : Number(puntenInput);
+         
+         if(!Number.isInteger(punten)){
+             alert("Voer een geheel getal in");
+             return;
+         }
          
          if(!naam){
              alert("Voer naam in");
