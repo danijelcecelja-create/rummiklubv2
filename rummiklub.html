@@ -528,9 +528,6 @@
          
          members.forEach(speler => {
          
-         const spellen = Number(speler.spellen) || 0;
-         const punten = Number(speler.punten) || 0;
-         const score = spellen > 0 ? Number((punten / spellen).toFixed(1)) : 0;
          
          const isOwner = speler.naam === decodeURIComponent(getCookie("playerName") || "");
          document.getElementById("memberTurnsText").innerHTML =
@@ -539,9 +536,9 @@
          main.innerHTML += `
              <tr>
                  <td>${speler.naam}</td>
-                 <td><b>${score}</b></td>
-                 <td>${spellen}</td>
-                 <td>${punten}</td>
+                 <td><b>${speler.score}</b></td>
+                 <td>${speler.spellen}</td>
+                 <td>${speler.punten}</td>
                 <td>
                     <button
                        class="plusBtn ${isOwner ? '' : 'disabled'}"
@@ -561,18 +558,16 @@
          
          guests.forEach(speler => {
          
-         const spellen = Number(speler.spellen) || 0;
-         const punten = Number(speler.punten) || 0;
-         const score = spellen > 0 ? Number((punten / spellen).toFixed(1)) : 0;
+         
          
          const isOwner = speler.naam === decodeURIComponent(getCookie("playerName") || "");
          
          secondary.innerHTML += `
              <tr>
                  <td>${speler.naam}</td>
-                 <td><b>${score}</b></td>
-                 <td>${spellen}</td>
-                 <td>${punten}</td>
+                 <td><b>${speler.score}</b></td>
+                 <td>${speler.spellen}</td>
+                 <td>${speler.punten}</td>
                  <td>
                     <button
                        class="plusBtn ${isOwner ? '' : 'disabled'}"
