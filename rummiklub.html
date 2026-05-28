@@ -320,7 +320,7 @@
       </div>
       <dialog id="scoreDialog">
          <h3>Punten toevoegen</h3>
-         <input type="number" id="scoreInput" placeholder="Punten" step="1">
+         <input type="number" id="scoreInput" placeholder="Punten" min="0" step="1">
          <div class="modalButtons">
             <button onclick="closeDialogs()">Annuleren</button>
             <button class="saveBtn" onclick="saveScore()">Opslaan</button>
@@ -329,7 +329,7 @@
       <dialog id="playerDialog">
          <h3>Nieuwe speler</h3>
          <input type="text" id="playerNameInput" placeholder="Naam">
-         <input type="number" id="playerScoreInput" placeholder="Punten" step="1">
+         <input type="number" id="playerScoreInput" placeholder="Punten" min="0" step="1">
          <div class="modalButtons">
             <button onclick="closeDialogs()">Annuleren</button>
             <button class="saveBtn" onclick="savePlayer()">Opslaan</button>
@@ -496,101 +496,83 @@
          }
          
          function render(){
-         
-         const main = document.getElementById("rankingMain");
-         const secondary = document.getElementById("rankingSecondary");
-         
-         main.innerHTML = "";
-         secondary.innerHTML = "";
-         
-         const membersHeaderRow = document.getElementById("membersHeaderRow");
-         const guestsHeaderRow = document.getElementById("guestsHeaderRow");
-         
-         if(membersHeaders.length){
-         membersHeaderRow.innerHTML = `
-             <th>${membersHeaders[0] ?? ""}</th>
-             <th>${membersHeaders[1] ?? ""}</th>
-             <th>${membersHeaders[2] ?? ""}</th>
-             <th>${membersHeaders[3] ?? ""}</th>
-             <th></th>
-         `;
-         }
-         
-         if(guestsHeaders.length){
-         guestsHeaderRow.innerHTML = `
-             <th>${guestsHeaders[0] ?? ""}</th>
-             <th>${guestsHeaders[1] ?? ""}</th>
-             <th>${guestsHeaders[2] ?? ""}</th>
-             <th>${guestsHeaders[3] ?? ""}</th>
-             <th></th>
-         `;
-         }
-         
-         members.forEach(speler => {
-         
-         
-         const isOwner = speler.naam === decodeURIComponent(getCookie("playerName") || "");
-         document.getElementById("memberTurnsText").innerHTML =
-          `${memberTurns}`;
-         
-         main.innerHTML += `
-             <tr>
-                 <td>${speler.naam}</td>
-                 <td><b>${speler.score}</b></td>
-                 <td>${speler.spellen}</td>
-                 <td>${speler.punten}</td>
-                <td>
-                    <button
-                       class="plusBtn ${isOwner ? '' : 'disabled'}"
-                        onclick="if(${isOwner}) showAddScore('${speler.naam}')"
-                        onmousedown="startHold('${speler.naam}', event)"
-         onmouseup="cancelHold()"
-         onmouseleave="cancelHold()"
-         ontouchstart="startHold('${speler.naam}', event)"
-         ontouchend="cancelHold()"
-                    >
-                           ${isOwner ? '+' : '-'}
-                    </button>
-                </td>
-             </tr>
-         `;
-         });
-         
-         guests.forEach(speler => {
-         
-         
-         
-         const isOwner = speler.naam === decodeURIComponent(getCookie("playerName") || "");
-         
-         secondary.innerHTML += `
-             <tr>
-                 <td>${speler.naam}</td>
-                 <td><b>${speler.score}</b></td>
-                 <td>${speler.spellen}</td>
-                 <td>${speler.punten}</td>
-                 <td>
-                    <button
-                       class="plusBtn ${isOwner ? '' : 'disabled'}"
-                        onclick="if(${isOwner}) showAddScore('${speler.naam}')"
-                        onmousedown="startHold('${speler.naam}', event)"
-         onmouseup="cancelHold()"
-         onmouseleave="cancelHold()"
-         ontouchstart="startHold('${speler.naam}', event)"
-         ontouchend="cancelHold()"
-                    >
-                           ${isOwner ? '+' : '-'}
-                    </button>
-                </td>
-             </tr>
-         `;
-         });
-         
-         document.getElementById("mainTable").style.display =
-         members.length ? "table" : "none";
-         
-         document.getElementById("secondaryTable").style.display =
-         guests.length ? "table" : "none";
-         }
+
+    const main = document.getElementById("rankingMain");
+    const secondary = document.getElementById("rankingSecondary");
+
+    const membersHeaderRow = document.getElementById("membersHeaderRow");
+    const guestsHeaderRow = document.getElementById("guestsHeaderRow");
+
+    const currentPlayer = decodeURIComponent(getCookie("playerName") || "");
+
+    main.innerHTML = "";
+    secondary.innerHTML = "";
+
+    if(membersHeaders.length){
+        membersHeaderRow.innerHTML = `
+            <th>${membersHeaders[0] ?? ""}</th>
+            <th>${membersHeaders[1] ?? ""}</th>
+            <th>${membersHeaders[2] ?? ""}</th>
+            <th>${membersHeaders[3] ?? ""}</th>
+            <th></th>
+        `;
+    }
+
+    if(guestsHeaders.length){
+        guestsHeaderRow.innerHTML = `
+            <th>${guestsHeaders[0] ?? ""}</th>
+            <th>${guestsHeaders[1] ?? ""}</th>
+            <th>${guestsHeaders[2] ?? ""}</th>
+            <th>${guestsHeaders[3] ?? ""}</th>
+            <th></th>
+        `;
+    }
+
+    document.getElementById("memberTurnsText").textContent = memberTurns;
+
+    function renderRows(players, target){
+
+        let html = "";
+
+        players.forEach(speler => {
+
+            const isOwner = speler.naam === currentPlayer;
+
+            html += `
+                <tr>
+                    <td>${speler.naam}</td>
+                    <td><b>${speler.score}</b></td>
+                    <td>${speler.spellen}</td>
+                    <td>${speler.punten}</td>
+                    <td>
+                        <button
+                            class="plusBtn ${isOwner ? '' : 'disabled'}"
+                            onclick="if(${isOwner}) showAddScore('${speler.naam}')"
+                            onmousedown="startHold('${speler.naam}', event)"
+                            onmouseup="cancelHold()"
+                            onmouseleave="cancelHold()"
+                            ontouchstart="startHold('${speler.naam}', event)"
+                            ontouchend="cancelHold()"
+                        >
+                            ${isOwner ? '+' : '-'}
+                        </button>
+                    </td>
+                </tr>
+            `;
+        });
+
+        target.innerHTML = html;
+    }
+
+    renderRows(members, main);
+    renderRows(guests, secondary);
+
+    document.getElementById("mainTable").style.display =
+        members.length ? "table" : "none";
+
+    document.getElementById("secondaryTable").style.display =
+        guests.length ? "table" : "none";
+}
          
          function showAddScore(naam){
          geselecteerdeSpeler = naam;
