@@ -441,7 +441,7 @@
          
          try{
          
-         const [membersRaw, guestsRaw] = await Promise.all([
+         const [membersRaw, guestsRaw, paramsRaw] = await Promise.all([
              readSheet("Members"),
              readSheet("Guests"),
              readSheet("Params")
