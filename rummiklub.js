@@ -306,6 +306,9 @@ async function savePlayer()
 
     try
     {
+        const naam = cleanPlayerName(
+            document.getElementById("playerNameInput").value
+        );
         const puntenInput = document.getElementById("playerScoreInput").value;
         const punten = puntenInput === "" ? 0 : Number(puntenInput);
         
