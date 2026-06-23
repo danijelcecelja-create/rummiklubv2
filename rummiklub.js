@@ -309,9 +309,16 @@ async function savePlayer()
         const naam = cleanPlayerName(
             document.getElementById("playerNameInput").value
         );
+
         const puntenInput = document.getElementById("playerScoreInput").value;
         const punten = puntenInput === "" ? 0 : Number(puntenInput);
-        
+
+        if (!naam)
+        {
+            alert("Voer een naam in");
+            return;
+        }
+
         if (!Number.isFinite(punten) || !Number.isInteger(punten))
         {
             alert("Voer een geheel getal in");
