@@ -136,7 +136,7 @@ async function loadPlayers()
             spellen: Number(r[2]) || 0,
             wins: Number(r[3]) || 0,
             punten: Number(r[4]) || 0,
-            last: r[4]
+            last: r[5]
         });
 
         members = membersSplit.rows.filter(r => r && r[0]).map(mapRow);
