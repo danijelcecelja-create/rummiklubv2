@@ -201,7 +201,7 @@ function render()
 
             html += `
                 <tr>
-                    <td title="${speler.last} ${speler.punten}">${speler.naam}</td>
+                    <td title="score: ${speler.punten}, laatst: ${speler.last}">${speler.naam}</td>
                     <td><b>${speler.score}</b></td>
                     <td>${speler.spellen}</td>
                     <td>${speler.wins}</td>
