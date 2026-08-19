@@ -7,7 +7,7 @@ window.saveScore = saveScore;
 window.savePlayer = savePlayer;
 window.showAddPlayer = showAddPlayer;
 window.closeDialogs = closeDialogs;
-//ok
+
 const apiUrl = "https://script.google.com/macros/s/AKfycbwi_PdOKLs0JzIPspPLX7230lgJv9AvmEQCHhSELMl-aUm1vNNwS2B3hEAgjCYwjRcpNA/exec";
 
 let members = [];
