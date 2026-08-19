@@ -172,7 +172,7 @@ function render()
             <th>${membersHeaders[1] ?? ""}</th>
             <th>${membersHeaders[2] ?? ""}</th>
             <th>${membersHeaders[3] ?? ""}</th>
-            <th>${membersHeaders[4] ?? ""}</th>
+            //<th>${membersHeaders[4] ?? ""}</th>
             <th></th>
         `;
     }
@@ -184,7 +184,7 @@ function render()
             <th>${guestsHeaders[1] ?? ""}</th>
             <th>${guestsHeaders[2] ?? ""}</th>
             <th>${guestsHeaders[3] ?? ""}</th>
-            <th>${guestsHeaders[4] ?? ""}</th>
+            //<th>${guestsHeaders[4] ?? ""}</th>
             <th></th>
         `;
     }
@@ -205,7 +205,7 @@ function render()
                     <td><b>${speler.score}</b></td>
                     <td>${speler.spellen}</td>
                     <td>${speler.wins}</td>
-                    <td>${speler.punten}</td>
+                    //<td>${speler.punten}</td>
                     <td>
                         <button
                             class="plusBtn ${isOwner ? "" : "disabled"}"
