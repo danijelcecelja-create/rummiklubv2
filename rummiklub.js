@@ -20,15 +20,7 @@ let memberTurns = "";
 let holdTimer = null;
 let holdPlayer = null;
 
-function formatLast(value)
-{
-    if (!value) return "";
 
-    const [date, time] = value.split(" ");
-    const [day, month, year] = date.split("/");
-
-    return `${day}-${month}-${year.slice(-2)} ${time.slice(0, 5)}`;
-}
 
 function startHold(name)
 {
@@ -182,7 +174,6 @@ function render()
             <th>${membersHeaders[1] ?? ""}</th>
             <th>${membersHeaders[2] ?? ""}</th>
             <th>${membersHeaders[3] ?? ""}</th>
-            //<th>${membersHeaders[4] ?? ""}</th>
             <th></th>
         `;
     }
@@ -211,7 +202,7 @@ function render()
 
             html += `
                 <tr>
-                    <td title="punten: ${speler.punten}, laatst: ${formatLast(speler.last)}">${speler.naam}</td>
+                    <td title="punten: ${speler.punten}, laatst: ${(speler.last)}">${speler.naam}</td>
                     <td><b>${speler.score}</b></td>
                     <td>${speler.spellen}</td>
                     <td>${speler.wins}</td>
