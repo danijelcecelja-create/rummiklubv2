@@ -35,7 +35,7 @@ function formatLast(value)
 
     const pad = n => String(n).padStart(2, "0");
 
-    return `${pad(d.getDate())}-${pad(d.getMonth() + 1)}-${String(d.getFullYear()).slice(-2)} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    return `${pad(d.getDate())}-${pad(d.getMonth() + 1)}-${String(d.getFullYear()).slice(-2)} ${pad(d.getHours())}u${pad(d.getMinutes())}`;
 }
 
 function startHold(name)
