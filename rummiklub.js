@@ -20,9 +20,13 @@ let memberTurns = "";
 let holdTimer = null;
 let holdPlayer = null;
 
-function showPlayerInfo(info)
+function showPlayerInfo(naam, last, punten)
 {
-    alert(`${info}`);
+    document.getElementById("playerInfoName").textContent = naam;
+    document.getElementById("playerInfoDetails").textContent =
+        `Laatst: ${last}\nPunten: ${punten}`;
+
+    document.getElementById("playerInfoDialog").showModal();
 }
 
 function formatLast(value)
@@ -219,11 +223,12 @@ function render()
             html += `
                 <tr>
                     <td
-                        title="laatste spel: ${formatLast(speler.last)} punten: ${speler.punten}"
-                        onclick="showPlayerInfo('${speler.naam} - laatste spel: ${formatLast(speler.last)} punten: ${speler.punten}')"
+                        title="${formatLast(speler.last)} ${speler.punten}"
+                        onclick="showPlayerInfo('${speler.naam}', '${formatLast(speler.last)}', '${speler.punten}')"
                     >
                         ${speler.naam}
                     </td>
+                                          
                     <td><b>${speler.score}</b></td>
                     <td>${speler.spellen}</td>
                     <td>${speler.wins}</td>
