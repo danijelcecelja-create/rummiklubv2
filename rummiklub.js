@@ -219,8 +219,8 @@ function render()
             html += `
                 <tr>
                     <td
-                        title="${speler.naam} - laatste spel: ${formatLast(speler.last)} punten: ${speler.punten}"
-                        onclick="showPlayerInfo('laatste spel: ${formatLast(speler.last)} punten: ${speler.punten}')"
+                        title="laatste spel: ${formatLast(speler.last)} punten: ${speler.punten}"
+                        onclick="${speler.naam} - showPlayerInfo('laatste spel: ${formatLast(speler.last)} punten: ${speler.punten}')"
                     >
                         ${speler.naam}
                     </td>
