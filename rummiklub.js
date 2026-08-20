@@ -20,6 +20,11 @@ let memberTurns = "";
 let holdTimer = null;
 let holdPlayer = null;
 
+function showPlayerInfo(info)
+{
+    alert(`${info}`);
+}
+
 function formatLast(value)
 {
     if (!value) return "";
@@ -213,7 +218,12 @@ function render()
 
             html += `
                 <tr>
-                    <td title="punten: ${speler.punten}, laatst: ${formatLast(speler.last)}">${speler.naam}</td>
+                    <td
+                        title="${formatLast(speler.last)} ${speler.punten}"
+                        onclick="showPlayerInfo('${formatLast(speler.last)} ${speler.punten}')"
+                    >
+                        ${speler.naam}
+                    </td>
                     <td><b>${speler.score}</b></td>
                     <td>${speler.spellen}</td>
                     <td>${speler.wins}</td>
