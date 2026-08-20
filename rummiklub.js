@@ -20,7 +20,18 @@ let memberTurns = "";
 let holdTimer = null;
 let holdPlayer = null;
 
+function formatLast(value)
+{
+    if (!value) return "";
 
+    const d = new Date(value);
+
+    if (Number.isNaN(d.getTime())) return "";
+
+    const pad = n => String(n).padStart(2, "0");
+
+    return `${pad(d.getDate())}-${pad(d.getMonth() + 1)}-${String(d.getFullYear()).slice(-2)} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
 
 function startHold(name)
 {
@@ -202,7 +213,7 @@ function render()
 
             html += `
                 <tr>
-                    <td title="punten: ${speler.punten}, laatst: ${(speler.last)}">${speler.naam}</td>
+                    <td title="punten: ${speler.punten}, laatst: ${formatLast(speler.last)}">${speler.naam}</td>
                     <td><b>${speler.score}</b></td>
                     <td>${speler.spellen}</td>
                     <td>${speler.wins}</td>
