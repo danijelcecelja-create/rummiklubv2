@@ -24,7 +24,7 @@ function showPlayerInfo(naam, last, punten)
 {
     document.getElementById("playerInfoName").textContent = naam;
     document.getElementById("playerInfoDetails").textContent =
-        `Laatst: ${last}\nPunten: ${punten}`;
+        `Laatste spel: ${last}\nPunten: ${punten}`;
 
     document.getElementById("playerInfoDialog").showModal();
 }
