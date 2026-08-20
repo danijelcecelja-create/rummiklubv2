@@ -13,7 +13,7 @@
          background:#fff;
          color:#111;
          }
-            .header{
+         .header{
          width:100%;
          display:flex;
          justify-content:center;
@@ -120,6 +120,10 @@
          width:260px;
          max-width:85vw;
          box-sizing:border-box;
+         }
+         #playerInfoDetails{
+          white-space:pre-line;
+          line-height:1.5;
          }
          dialog h3{
          margin-top:0;
@@ -319,6 +323,13 @@
             </tr>
          </table>
       </div>
+      <dialog id="playerInfoDialog">
+         <h3 id="playerInfoName"></h3>
+         <p id="playerInfoDetails"></p>
+         <div class="modalButtons">
+            <button onclick="document.getElementById('playerInfoDialog').close()">Sluiten</button>
+         </div>
+      </dialog>
       <dialog id="scoreDialog">
          <h3>Punten toevoegen</h3>
          <input type="number" id="scoreInput" placeholder="Punten" min="0" step="1">
