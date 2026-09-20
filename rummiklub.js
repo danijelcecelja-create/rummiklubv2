@@ -190,6 +190,7 @@ function render()
     if (membersHeaders.length)
     {
         membersHeaderRow.innerHTML = `
+            <th></th>
             <th>${membersHeaders[0] ?? ""}</th>
             <th>${membersHeaders[1] ?? ""}</th>
             <th>${membersHeaders[2] ?? ""}</th>
@@ -201,6 +202,7 @@ function render()
     if (guestsHeaders.length)
     {
         guestsHeaderRow.innerHTML = `
+            <th></th>
             <th>${guestsHeaders[0] ?? ""}</th>
             <th>${guestsHeaders[1] ?? ""}</th>
             <th>${guestsHeaders[2] ?? ""}</th>
@@ -215,24 +217,24 @@ function render()
     const renderRows = (players, target) =>
     {
         let html = "";
-
-        players.forEach(speler =>
+    
+        players.forEach((speler, index) =>
         {
             const isOwner = speler.naam === currentPlayer;
-
+            const ranking = index + 1;
+    
             html += `
                 <tr>
+                    <td>${ranking}</td>
                     <td
                         title="${formatLast(speler.last)} ${speler.punten}"
                         onclick="showPlayerInfo('${speler.naam}', '${formatLast(speler.last)}', '${speler.punten}')"
                     >
                         ${speler.naam}
                     </td>
-                                          
                     <td><b>${speler.score}</b></td>
                     <td>${speler.spellen}</td>
                     <td>${speler.wins}</td>
-                   
                     <td>
                         <button
                             class="plusBtn ${isOwner ? "" : "disabled"}"
@@ -249,7 +251,7 @@ function render()
                 </tr>
             `;
         });
-
+    
         target.innerHTML = html;
     };
 
