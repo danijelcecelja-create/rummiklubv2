@@ -233,8 +233,12 @@ function render()
             const ranking = index + 1;
     
             html += `
-                
-                    <td class="playerName"><span class="rankingIndex">${index + 1} </span>${speler.naam}</td>       
+                    <td
+                        class="playerName"
+                        title="${formatLast(speler.last)} ${speler.punten}"
+                        onclick="showPlayerInfo('${speler.naam}', '${formatLast(speler.last)}', '${speler.punten}')">
+                        ${index + 1} </span>${speler.naam}
+                    </td>
                     <td><b>${speler.score}</b></td>
                     <td>${speler.spellen}</td>
                     <td>${speler.wins}</td>
