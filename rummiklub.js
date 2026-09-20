@@ -291,6 +291,11 @@ function closeDialogs()
 
 async function saveScore()
 {
+    const input = document.getElementById("scoreInput").value;
+    const punten = parsePunten(input);
+
+    if (punten === null) return;
+
     const btn = document.querySelector("#scoreDialog .saveBtn");
 
     btn.disabled = true;
@@ -299,15 +304,6 @@ async function saveScore()
 
     try
     {
-        const input = document.getElementById("scoreInput").value;
-        const punten = input === "" ? 0 : Number(input);
-        
-        if (!Number.isFinite(punten) || !Number.isInteger(punten))
-        {
-            alert("Voer een geheel getal in");
-            return;
-        }
-
         const timestamp = formatTimestamp(new Date());
 
         await apiPost(
@@ -338,6 +334,27 @@ async function saveScore()
 
 async function savePlayer()
 {
+    const naam = cleanPlayerName(
+        document.getElementById("playerNameInput").value
+    );
+
+    const puntenInput = document.getElementById("playerScoreInput").value;
+    const punten = parsePunten(puntenInput);
+
+    if (!naam)
+    {
+        alert("Voer een naam in");
+        return;
+    }
+
+    if (punten === null) return;
+
+    if ([...members, ...guests].some(x => x.naam.toLowerCase() === naam.toLowerCase()))
+    {
+        alert("Speler bestaat al");
+        return;
+    }
+
     const btn = document.querySelector("#playerDialog .saveBtn");
 
     btn.disabled = true;
@@ -346,31 +363,6 @@ async function savePlayer()
 
     try
     {
-        const naam = cleanPlayerName(
-            document.getElementById("playerNameInput").value
-        );
-
-        const puntenInput = document.getElementById("playerScoreInput").value;
-        const punten = puntenInput === "" ? 0 : Number(puntenInput);
-
-        if (!naam)
-        {
-            alert("Voer een naam in");
-            return;
-        }
-
-        if (!Number.isFinite(punten) || !Number.isInteger(punten))
-        {
-            alert("Voer een geheel getal in");
-            return;
-        }
-
-        if ([...members, ...guests].some(x => x.naam.toLowerCase() === naam.toLowerCase()))
-        {
-            alert("Speler bestaat al");
-            return;
-        }
-
         const timestamp = formatTimestamp(new Date());
 
         await apiPost(
@@ -406,6 +398,35 @@ async function savePlayer()
             btn.innerHTML = "Opslaan";
         }, 10000);
     }
+}
+
+function parsePunten(input)
+{
+    const value = input.trim();
+
+    if (!value)
+    {
+        alert("Voer een score in");
+        return null;
+    }
+
+    const values = value.match(/\d+/g);
+
+    if (!values)
+    {
+        alert("Voer een geldige score in");
+        return null;
+    }
+
+    const punten = values.reduce((sum, value) => sum + Number(value), 0);
+
+    if (!Number.isSafeInteger(punten))
+    {
+        alert("Score is te groot");
+        return null;
+    }
+
+    return punten;
 }
 
 loadPlayers();
