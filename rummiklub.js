@@ -190,8 +190,12 @@ function render()
     if (membersHeaders.length)
     {
         membersHeaderRow.innerHTML = `
-            <th></th>
-            
+            <th> <a href="https://docs.google.com/spreadsheets/u/0/?q=%22Rummiklub%25%22"
+                        target="_blank"
+                        style="color:inherit; text-decoration:none;">
+                     <span class="rankingIndex">&nbsp </span>${guestsHeaders[0] ?? ""}
+                     </a>
+            </th>
             <th>${membersHeaders[1] ?? ""}</th>
             <th>${membersHeaders[2] ?? ""}</th>
             <th>${membersHeaders[3] ?? ""}</th>
@@ -202,7 +206,12 @@ function render()
     if (guestsHeaders.length)
     {
         guestsHeaderRow.innerHTML = `
-            <th></th>
+            <th> <a href="https://docs.google.com/spreadsheets/u/0/?q=%22Rummiklub%25%22"
+                        target="_blank"
+                        style="color:inherit; text-decoration:none;">
+                     <span class="rankingIndex">&nbsp </span>${guestsHeaders[0] ?? ""}
+                     </a>
+            </th>
             
             <th>${guestsHeaders[1] ?? ""}</th>
             <th>${guestsHeaders[2] ?? ""}</th>
