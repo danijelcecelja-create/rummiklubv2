@@ -225,7 +225,7 @@ function render()
     
             html += `
                 <tr>
-                    <td>${ranking}</td>
+                    <td class="rankingIndex">${ranking}</td>
                     <td
                         title="${formatLast(speler.last)} ${speler.punten}"
                         onclick="showPlayerInfo('${speler.naam}', '${formatLast(speler.last)}', '${speler.punten}')"
