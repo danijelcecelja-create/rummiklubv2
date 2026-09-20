@@ -190,8 +190,8 @@ function render()
     if (membersHeaders.length)
     {
         membersHeaderRow.innerHTML = `
-            <th></th>
             <th>${membersHeaders[0] ?? ""}</th>
+            <th></th>
             <th>${membersHeaders[1] ?? ""}</th>
             <th>${membersHeaders[2] ?? ""}</th>
             <th>${membersHeaders[3] ?? ""}</th>
@@ -202,8 +202,8 @@ function render()
     if (guestsHeaders.length)
     {
         guestsHeaderRow.innerHTML = `
-            <th></th>
             <th>${guestsHeaders[0] ?? ""}</th>
+            <th></th>
             <th>${guestsHeaders[1] ?? ""}</th>
             <th>${guestsHeaders[2] ?? ""}</th>
             <th>${guestsHeaders[3] ?? ""}</th>
