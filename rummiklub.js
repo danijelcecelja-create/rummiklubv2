@@ -225,10 +225,7 @@ function render()
     
             html += `
                 
-                    <td class="playerName">
-    <span class="rankingIndex">${index + 1}</span>
-    ${speler.naam}
-</td>       
+                    <td class="playerName"><span class="rankingIndex">${index + 1} </span>${speler.naam}</td>       
                     <td><b>${speler.score}</b></td>
                     <td>${speler.spellen}</td>
                     <td>${speler.wins}</td>
