@@ -193,7 +193,7 @@ function render()
             <th> <a href="https://docs.google.com/spreadsheets/u/0/?q=%22Rummiklub%25%22"
                         target="_blank"
                         style="color:inherit; text-decoration:none;">
-                     <span class="rankingIndex">&nbsp </span>${guestsHeaders[0] ?? ""}
+                     <span class="rankingIndex">&nbsp </span>${membersHeaders[0] ?? ""}
                      </a>
             </th>
             <th>${membersHeaders[1] ?? ""}</th>
