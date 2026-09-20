@@ -191,7 +191,7 @@ function render()
     {
         membersHeaderRow.innerHTML = `
             <th>${membersHeaders[0] ?? ""}</th>
-            <th></th>
+            
             <th>${membersHeaders[1] ?? ""}</th>
             <th>${membersHeaders[2] ?? ""}</th>
             <th>${membersHeaders[3] ?? ""}</th>
@@ -203,7 +203,7 @@ function render()
     {
         guestsHeaderRow.innerHTML = `
             <th>${guestsHeaders[0] ?? ""}</th>
-            <th></th>
+            
             <th>${guestsHeaders[1] ?? ""}</th>
             <th>${guestsHeaders[2] ?? ""}</th>
             <th>${guestsHeaders[3] ?? ""}</th>
@@ -224,12 +224,11 @@ function render()
             const ranking = index + 1;
     
             html += `
-                <tr>
-                    <td class="rankingIndex">${ranking}</td>
-                    <td class="playerName"
-                        title="${formatLast(speler.last)} ${speler.punten}"
-                        onclick="showPlayerInfo('${speler.naam}', '${formatLast(speler.last)}', '${speler.punten}')"
-                    >
+                
+                    <td class="playerName">
+    <span class="rankingIndex">${index + 1}</span>
+    ${speler.naam}
+</td>
                         ${speler.naam}
                     </td>
                     <td><b>${speler.score}</b></td>
