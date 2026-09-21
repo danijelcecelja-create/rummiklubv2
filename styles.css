@@ -83,13 +83,13 @@
          }
          th{
          font-weight:bold;
-         background:#e5e5e5;
+         background:#e0e0e0;
          }
          .thspan{
          font-weight:bolder;
-         background:#f5f5f5;
-         padding-top:15px;
-         padding-bottom:15px;
+         background:#e5e5e5;
+         padding-top:16px;
+         padding-bottom:16px;
          }
          .score{
          font-weight:bold;
