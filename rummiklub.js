@@ -236,7 +236,7 @@ function render()
 
     document.getElementById("memberTurnsText").textContent = memberTurns;
 
-    const renderRows = (players, target) =>
+    const renderRows = (players, target,isMembers) =>
     {
         let html = "";
 
@@ -251,7 +251,9 @@ function render()
                         class="playerName"
                         title="${formatLast(speler.last)} ${speler.punten}"
                         onclick="showPlayerInfo('${speler.naam}', '${formatLast(speler.last)}', '${speler.punten}')">
-                        <span class="rankingIndex">${ranking}</span>${speler.naam}
+                        <span class="rankingIndex">${isMembers && index === 0 ? "🥇" : isMembers && index === 1 ? "🥈" : isMembers && index === 2 ? "🥉" : index + 1} </span>${speler.naam}
+
+                        
                     </td>
                     <td><b>${speler.score}</b></td>
                     <td>${speler.spellen}</td>
@@ -276,8 +278,8 @@ function render()
         target.innerHTML = html;
     };
 
-    renderRows(members, main);
-    renderRows(guests, secondary);
+    renderRows(members, main,true);
+    renderRows(guests, secondary,false);
 
     document.getElementById("mainTable").style.display =
         members.length ? "table" : "none";
