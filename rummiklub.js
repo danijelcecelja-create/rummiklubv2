@@ -1,5 +1,3 @@
-//https://beautifier.io/
-
 window.showAddScore = showAddScore;
 window.startHold = startHold;
 window.cancelHold = cancelHold;
@@ -69,7 +67,9 @@ function setCookie(name, value, days = 3650)
 {
     const d = new Date();
     d.setTime(d.getTime() + days * 24 * 60 * 60 * 1000);
-    document.cookie = `${name}=${encodeURIComponent(value)}; expires=${d.toUTCString()}; path=/`;
+
+    document.cookie =
+        `${name}=${encodeURIComponent(value)}; expires=${d.toUTCString()}; path=/`;
 }
 
 function getCookie(name)
@@ -112,11 +112,15 @@ async function apiPost(payload)
     });
 }
 
-async function readSheet(sheetName)
+async function readRanking()
 {
-    const url = `${apiUrl}?action=readTable&sheetName=${sheetName}`;
+    const response = await fetch(`${apiUrl}?action=readRanking`);
 
-    const response = await fetch(url);
+    if (!response.ok)
+    {
+        throw new Error(`HTTP ${response.status}`);
+    }
+
     return response.json();
 }
 
@@ -126,11 +130,11 @@ async function loadPlayers()
 
     try
     {
-        const [membersRaw, guestsRaw, paramsRaw] = await Promise.all([
-            readSheet("Members"),
-            readSheet("Guests"),
-            readSheet("Params")
-        ]);
+        const data = await readRanking();
+
+        const membersRaw = data.members;
+        const guestsRaw = data.guests;
+        const paramsRaw = data.params;
 
         const extract = data =>
         {
@@ -161,12 +165,21 @@ async function loadPlayers()
             last: r[5]
         });
 
-        members = membersSplit.rows.filter(r => r && r[0]).map(mapRow);
-        guests = guestsSplit.rows.filter(r => r && r[0]).map(mapRow);
+        members = membersSplit.rows
+            .filter(r => r && r[0])
+            .map(mapRow);
+
+        guests = guestsSplit.rows
+            .filter(r => r && r[0])
+            .map(mapRow);
 
         memberTurns = paramsRaw?.[0]?.[1] || "";
 
         render();
+    }
+    catch (error)
+    {
+        console.error(error);
     }
     finally
     {
@@ -190,11 +203,12 @@ function render()
     if (membersHeaders.length)
     {
         membersHeaderRow.innerHTML = `
-            <th> <a href="https://docs.google.com/spreadsheets/u/0/?q=%22Rummiklub%25%22"
-                        target="_blank"
-                        style="color:inherit; text-decoration:none;">
-                     <span class="rankingIndex">&nbsp </span>${membersHeaders[0] ?? ""}
-                     </a>
+            <th>
+                <a href="https://docs.google.com/spreadsheets/u/0/?q=%22Rummiklub%25%22"
+                   target="_blank"
+                   style="color:inherit; text-decoration:none;">
+                    <span class="rankingIndex">&nbsp;</span>${membersHeaders[0] ?? ""}
+                </a>
             </th>
             <th>${membersHeaders[1] ?? ""}</th>
             <th>${membersHeaders[2] ?? ""}</th>
@@ -206,17 +220,16 @@ function render()
     if (guestsHeaders.length)
     {
         guestsHeaderRow.innerHTML = `
-            <th> <a href="https://docs.google.com/spreadsheets/u/0/?q=%22Rummiklub%25%22"
-                        target="_blank"
-                        style="color:inherit; text-decoration:none;">
-                     <span class="rankingIndex">&nbsp </span>${guestsHeaders[0] ?? ""}
-                     </a>
+            <th>
+                <a href="https://docs.google.com/spreadsheets/u/0/?q=%22Rummiklub%25%22"
+                   target="_blank"
+                   style="color:inherit; text-decoration:none;">
+                    <span class="rankingIndex">&nbsp;</span>${guestsHeaders[0] ?? ""}
+                </a>
             </th>
-            
             <th>${guestsHeaders[1] ?? ""}</th>
             <th>${guestsHeaders[2] ?? ""}</th>
             <th>${guestsHeaders[3] ?? ""}</th>
-            
             <th></th>
         `;
     }
@@ -226,18 +239,19 @@ function render()
     const renderRows = (players, target) =>
     {
         let html = "";
-    
+
         players.forEach((speler, index) =>
         {
             const isOwner = speler.naam === currentPlayer;
             const ranking = index + 1;
-    
+
             html += `
+                <tr>
                     <td
                         class="playerName"
                         title="${formatLast(speler.last)} ${speler.punten}"
                         onclick="showPlayerInfo('${speler.naam}', '${formatLast(speler.last)}', '${speler.punten}')">
-                        <span class="rankingIndex">${index + 1} </span>${speler.naam}
+                        <span class="rankingIndex">${ranking}</span>${speler.naam}
                     </td>
                     <td><b>${speler.score}</b></td>
                     <td>${speler.spellen}</td>
@@ -258,21 +272,26 @@ function render()
                 </tr>
             `;
         });
-    
+
         target.innerHTML = html;
     };
 
     renderRows(members, main);
     renderRows(guests, secondary);
 
-    document.getElementById("mainTable").style.display = members.length ? "table" : "none";
-    document.getElementById("secondaryTable").style.display = guests.length ? "table" : "none";
+    document.getElementById("mainTable").style.display =
+        members.length ? "table" : "none";
+
+    document.getElementById("secondaryTable").style.display =
+        guests.length ? "table" : "none";
 }
 
 function showAddScore(naam)
 {
     selectedPlayer = naam;
+
     document.getElementById("scoreInput").value = "";
+
     document.getElementById("scoreDialog").showModal();
 }
 
@@ -280,6 +299,7 @@ function showAddPlayer()
 {
     document.getElementById("playerNameInput").value = "";
     document.getElementById("playerScoreInput").value = "";
+
     document.getElementById("playerDialog").showModal();
 }
 
@@ -306,7 +326,7 @@ async function saveScore()
     {
         const timestamp = formatTimestamp(new Date());
 
-        await apiPost(
+        const response = await apiPost(
         {
             action: "addRow",
             sheetName: "GameTable",
@@ -318,8 +338,19 @@ async function saveScore()
             ]
         });
 
+        if (!response.ok)
+        {
+            throw new Error(`HTTP ${response.status}`);
+        }
+
         closeDialogs();
-        loadPlayers();
+
+        await loadPlayers();
+    }
+    catch (error)
+    {
+        console.error(error);
+        alert("Opslaan mislukt");
     }
     finally
     {
@@ -349,7 +380,8 @@ async function savePlayer()
 
     if (punten === null) return;
 
-    if ([...members, ...guests].some(x => x.naam.toLowerCase() === naam.toLowerCase()))
+    if ([...members, ...guests]
+        .some(x => x.naam.toLowerCase() === naam.toLowerCase()))
     {
         alert("Speler bestaat al");
         return;
@@ -365,29 +397,29 @@ async function savePlayer()
     {
         const timestamp = formatTimestamp(new Date());
 
-        await apiPost(
+        const response = await apiPost(
         {
-            action: "addRow",
-            sheetName: "PlayerTable",
-            data: [naam]
+            action: "addPlayer",
+            name: naam,
+            timestamp: timestamp,
+            points: punten
         });
 
-        await apiPost(
+        if (!response.ok)
         {
-            action: "addRow",
-            sheetName: "GameTable",
-            data: [
-                `${naam}-${timestamp}`,
-                naam,
-                timestamp,
-                punten
-            ]
-        });
+            throw new Error(`HTTP ${response.status}`);
+        }
 
         setCookie("playerName", naam);
 
         closeDialogs();
-        loadPlayers();
+
+        await loadPlayers();
+    }
+    catch (error)
+    {
+        console.error(error);
+        alert("Opslaan mislukt");
     }
     finally
     {
@@ -418,7 +450,10 @@ function parsePunten(input)
         return null;
     }
 
-    const punten = values.reduce((sum, value) => sum + Number(value), 0);
+    const punten = values.reduce(
+        (sum, value) => sum + Number(value),
+        0
+    );
 
     if (!Number.isSafeInteger(punten))
     {
