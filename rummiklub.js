@@ -35,9 +35,12 @@ function formatLast(value)
 
     if (Number.isNaN(d.getTime())) return "";
 
+    const days = ["zo", "ma", "di", "wo", "do", "vr", "za"];
+    const months = ["jan", "feb", "mrt", "apr", "mei", "jun", "jul", "aug", "sept", "okt", "nov", "dec"];
+
     const pad = n => String(n).padStart(2, "0");
 
-    return `${pad(d.getDate())}-${pad(d.getMonth() + 1)}-${String(d.getFullYear()).slice(-2)} ${pad(d.getHours())}u${pad(d.getMinutes())}`;
+    return `${days[d.getDay()]} ${pad(d.getDate())} ${months[d.getMonth()]} ${String(d.getFullYear()).slice(-2)} ${pad(d.getHours())}u${pad(d.getMinutes())}`;
 }
 
 function startHold(name)
