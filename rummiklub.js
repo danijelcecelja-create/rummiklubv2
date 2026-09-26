@@ -298,7 +298,7 @@ function render()
                     <td>
                         <button
                             class="plusBtn ${isOwner ? "" : "disabled"}"
-                            onclick="if(${isOwner}) showAddScore('${speler.naam}')"
+                            onclick="if(${isOwner}) showAddScore('${speler.naam $isMembers}')"
                             onmousedown="startHold('${speler.naam}', event)"
                             onmouseup="cancelHold()"
                             onmouseleave="cancelHold()"
