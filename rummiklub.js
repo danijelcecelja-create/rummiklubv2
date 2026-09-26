@@ -18,11 +18,36 @@ let memberTurns = "";
 let holdTimer = null;
 let holdPlayer = null;
 
-function showPlayerInfo(naam, last, punten)
+function showPlayerInfo(naam, last, punten, spellen, wins, isMember)
 {
+    const winRate = spellen > 0
+        ? (100 / spellen) * wins
+        : 0;
+
+    const scoreNextWin = spellen + 1 > 0
+        ? punten / (spellen + 1)
+        : 0;
+
     document.getElementById("playerInfoName").textContent = naam;
-    document.getElementById("playerInfoDetails").textContent =
-        `Laatste spel: \n${last}\nPunten: \n${punten}`;
+
+    let details =
+        `Laatste spel: ${last}\n` +
+        `Punten: ${punten}\n` +
+        `Win rate: ${winRate.toFixed(1)}%\n` +
+        `Score op volgende win: ${scoreNextWin.toFixed(1)}`;
+
+    if (isMember)
+    {
+        const rankingScore = scoreNextWin;
+
+        const position = members.filter(player =>
+            player.score < rankingScore
+        ).length + 1;
+
+        details += `\nPuts you in: ${position}e plaats`;
+    }
+
+    document.getElementById("playerInfoDetails").textContent = details;
 
     document.getElementById("playerInfoDialog").showModal();
 }
