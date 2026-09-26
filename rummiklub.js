@@ -287,7 +287,7 @@ function render()
                     <td
                         class="playerName"
                         title="${formatLast(speler.last)} ${speler.punten}"
-                        onclick="showPlayerInfo('${speler.naam}', '${formatLast(speler.last)}', '${speler.punten}')">
+                        onclick="showPlayerInfo('${speler.naam}', ${isMembers})">
                         <span class="rankingIndex">${isMembers && index === 0 ? "🥇" : isMembers && index === 1 ? "🥈" : isMembers && index === 2 ? "🥉" : index + 1} </span>${speler.naam}
 
                         
