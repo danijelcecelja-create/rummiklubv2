@@ -18,7 +18,7 @@ let memberTurns = "";
 let holdTimer = null;
 let holdPlayer = null;
 
-function showPlayerInfo(naam, last, punten, spellen, wins, isMember)
+
 function showPlayerInfo(naam, isMember)
 {
     const players = isMember ? members : guests;
