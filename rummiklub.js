@@ -53,7 +53,7 @@ function showPlayerInfo(naam, isMember)
             Number(player.score) < scoreNextWin
         ).length + 1;
 
-        details += ` - {position}e plaats`;
+        details += ` - ${position}e plaats`;
     }
 
     document.getElementById("playerInfoDetails").textContent = details;
