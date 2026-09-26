@@ -19,29 +19,38 @@ let holdTimer = null;
 let holdPlayer = null;
 
 function showPlayerInfo(naam, last, punten, spellen, wins, isMember)
+function showPlayerInfo(naam, isMember)
 {
+    const players = isMember ? members : guests;
+    const speler = players.find(player => player.naam === naam);
+
+    if (!speler)
+    {
+        return;
+    }
+
+    const spellen = Number(speler.spellen) || 0;
+    const wins = Number(speler.wins) || 0;
+    const punten = Number(speler.punten) || 0;
+
     const winRate = spellen > 0
-        ? (100 / spellen) * wins
+        ? (wins / spellen) * 100
         : 0;
 
-    const scoreNextWin = spellen + 1 > 0
-        ? punten / (spellen + 1)
-        : 0;
+    const scoreNextWin = punten / (spellen + 1);
 
-    document.getElementById("playerInfoName").textContent = naam;
+    document.getElementById("playerInfoName").textContent = speler.naam;
 
     let details =
-        `Laatste spel: ${last}\n` +
+        `Laatste spel: ${formatLast(speler.last)}\n` +
         `Punten: ${punten}\n` +
         `Win rate: ${winRate.toFixed(1)}%\n` +
         `Score op volgende win: ${scoreNextWin.toFixed(1)}`;
 
     if (isMember)
     {
-        const rankingScore = scoreNextWin;
-
         const position = members.filter(player =>
-            player.score < rankingScore
+            Number(player.score) < scoreNextWin
         ).length + 1;
 
         details += `\nPuts you in: ${position}e plaats`;
