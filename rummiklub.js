@@ -283,33 +283,31 @@ function render()
             const ranking = index + 1;
 
             html += `
-                <tr>
-                    <td
-                        class="playerName"
-                        title="${formatLast(speler.last)} ${speler.punten}"
-                        onclick="showPlayerInfo('${speler.naam}', ${isMembers})">
-                        <span class="rankingIndex">${isMembers && index === 0 ? "🥇" : isMembers && index === 1 ? "🥈" : isMembers && index === 2 ? "🥉" : index + 1} </span>${speler.naam}
-
-                        
-                    </td>
-                    <td><b>${speler.score}</b></td>
-                    <td>${speler.spellen}</td>
-                    <td>${speler.wins}</td>
-                    <td>
-                        <button
-                            class="plusBtn ${isOwner ? "" : "disabled"}"
-                            onclick="if(${isOwner}) showAddScore('${speler.naam $isMembers}')"
-                            onmousedown="startHold('${speler.naam}', event)"
-                            onmouseup="cancelHold()"
-                            onmouseleave="cancelHold()"
-                            ontouchstart="startHold('${speler.naam}', event)"
-                            ontouchend="cancelHold()"
-                        >
-                            ${isOwner ? "+" : "-"}
-                        </button>
-                    </td>
-                </tr>
-            `;
+            <tr>
+                <td
+                    class="playerName"
+                    title="${formatLast(speler.last)} ${speler.punten}"
+                    onclick="showPlayerInfo('${speler.naam}', ${isMembers})">
+                    <span class="rankingIndex">${isMembers && index === 0 ? "🥇" : isMembers && index === 1 ? "🥈" : isMembers && index === 2 ? "🥉" : index + 1} </span>${speler.naam}
+                </td>
+                <td><b>${speler.score}</b></td>
+                <td>${speler.spellen}</td>
+                <td>${speler.wins}</td>
+                <td>
+                    <button
+                        class="plusBtn ${isOwner ? "" : "disabled"}"
+                        onclick="if(${isOwner}) showAddScore('${speler.naam}')"
+                        onmousedown="startHold('${speler.naam}', event)"
+                        onmouseup="cancelHold()"
+                        onmouseleave="cancelHold()"
+                        ontouchstart="startHold('${speler.naam}', event)"
+                        ontouchend="cancelHold()"
+                    >
+                        ${isOwner ? "+" : "-"}
+                    </button>
+                </td>
+            </tr>
+        `;
         });
 
         target.innerHTML = html;
