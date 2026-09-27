@@ -44,6 +44,9 @@ function showPlayerInfo(naam, isMember)
     let details =
         `Laatste spel: \n${formatLast(speler.last)}\n` +
         `Punten: ${punten}\n` +
+        `Beurten: ${spellen}\n` +
+        `Score: ${score}\n` +
+        `Wins: ${wins}\n` +
         `Win rate: ${winRate.toFixed(0)}%\n` +
         `Bij next win: ${scoreNextWin.toFixed(1)}`;
 
