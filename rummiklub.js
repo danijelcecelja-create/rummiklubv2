@@ -45,7 +45,7 @@ function showPlayerInfo(naam, isMember)
         `Laatste spel: \n${formatLast(speler.last)}\n` +
         `Punten: ${punten}\n` +
         `Win ratio: ${winRate.toFixed(0)}%\n` +
-        `Score bij next win: ${scoreNextWin.toFixed(1)}`;
+        `Bij next win: ${scoreNextWin.toFixed(1)}`;
 
     if (isMember)
     {
@@ -53,7 +53,7 @@ function showPlayerInfo(naam, isMember)
             Number(player.score) < scoreNextWin
         ).length + 1;
 
-        details += ` - ${position}e plaats`;
+        details += ` - ${position}e`;
     }
 
     document.getElementById("playerInfoDetails").textContent = details;
