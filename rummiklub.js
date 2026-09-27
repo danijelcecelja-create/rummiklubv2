@@ -40,30 +40,86 @@ function showPlayerInfo(naam, isMember)
 
     const scoreNextWin = punten / (spellen + 1);
 
-    document.getElementById("playerInfoName").textContent = speler.naam;
-
-    let details =
-        `Laatste spel: \n${formatLast(speler.last)}\n` +
-        `Punten: ${punten}\n` +
-        `Beurten: ${spellen}\n` +
-        `Score: ${score}\n` +
-        `Wins: ${wins}\n` +
-        `Win rate: ${winRate.toFixed(0)}%\n` +
-        `Bij next win: ${scoreNextWin.toFixed(1)}`;
+    let positionStr = "";
 
     if (isMember)
     {
-        
         const position = members.filter(player =>
-                    Number(player.score) < scoreNextWin
-                ).length;
-        
-        
-        const positionStr = position === 0 ? "🥇" : position === 1 ? "🥈" : position === 2 ? "🥉" : position + 1;
-        details += ` - ${positionStr}`;
+            Number(player.score) < scoreNextWin
+        ).length;
+
+        positionStr =
+            position === 0 ? "🥇 1e" :
+            position === 1 ? "🥈 2e" :
+            position === 2 ? "🥉 3e" :
+            `${position + 1}e`;
     }
 
-    document.getElementById("playerInfoDetails").textContent = details;
+    document.getElementById("playerInfoName").textContent = speler.naam;
+
+    const details = document.getElementById("playerInfoDetails");
+
+    details.innerHTML = `
+        <div class="playerStats">
+
+            <div class="playerLastGame">
+                Laatste spel: ${formatLast(speler.last)}
+            </div>
+
+            <div class="winRateSection">
+                <div class="winRateHeader">
+                    <span>Win rate</span>
+                    <strong>${winRate.toFixed(0)}%</strong>
+                </div>
+
+                <div class="winRateBar">
+                    <div class="winRateFill" style="width:${Math.min(winRate, 100)}%"></div>
+                </div>
+
+                <div class="winRateSub">
+                    ${wins} wins uit ${spellen} beurten
+                </div>
+            </div>
+
+            <div class="statGrid">
+
+                <div class="statCard">
+                    <span class="statLabel">Punten</span>
+                    <strong>${punten}</strong>
+                </div>
+
+                <div class="statCard">
+                    <span class="statLabel">Beurten</span>
+                    <strong>${spellen}</strong>
+                </div>
+
+                <div class="statCard">
+                    <span class="statLabel">Wins</span>
+                    <strong>${wins}</strong>
+                </div>
+
+                <div class="statCard">
+                    <span class="statLabel">Score</span>
+                    <strong>${score}</strong>
+                </div>
+
+            </div>
+
+            <div class="nextWinCard">
+                <div>
+                    <span class="nextWinLabel">Bij volgende win</span>
+                    <strong>${scoreNextWin.toFixed(1)}</strong>
+                </div>
+
+                ${isMember ? `
+                    <div class="nextWinPosition">
+                        ${positionStr}
+                    </div>
+                ` : ""}
+            </div>
+
+        </div>
+    `;
 
     document.getElementById("playerInfoDialog").showModal();
 }
