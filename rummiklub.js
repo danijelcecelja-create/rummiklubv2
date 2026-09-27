@@ -32,6 +32,7 @@ function showPlayerInfo(naam, isMember)
     const spellen = Number(speler.spellen) || 0;
     const wins = Number(speler.wins) || 0;
     const punten = Number(speler.punten) || 0;
+    const score = Number(speler.score) || 0;
 
     const winRate = spellen > 0
         ? (wins / spellen) * 100
