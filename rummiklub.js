@@ -44,7 +44,7 @@ function showPlayerInfo(naam, isMember)
     let details =
         `Laatste spel: \n${formatLast(speler.last)}\n` +
         `Punten: ${punten}\n` +
-        `Win ratio: ${winRate.toFixed(0)}%\n` +
+        `Win rate: ${winRate.toFixed(0)}%\n` +
         `Bij next win: ${scoreNextWin.toFixed(1)}`;
 
     if (isMember)
