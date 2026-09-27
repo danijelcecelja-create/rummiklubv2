@@ -66,20 +66,7 @@ function showPlayerInfo(naam, isMember)
                 Laatste spel: ${formatLast(speler.last)}
             </div>
 
-            <div class="winRateSection">
-                <div class="winRateHeader">
-                    <span>Win rate</span>
-                    <strong>${winRate.toFixed(0)}%</strong>
-                </div>
-
-                <div class="winRateBar">
-                    <div class="winRateFill" style="width:${Math.min(winRate, 100)}%"></div>
-                </div>
-
-                <div class="winRateSub">
-                    ${wins} wins uit ${spellen} beurten
-                </div>
-            </div>
+            
 
             <div class="statGrid">
 
@@ -104,7 +91,17 @@ function showPlayerInfo(naam, isMember)
                 </div>
 
             </div>
+            <div class="winRateSection">
+                <div class="winRateHeader">
+                    <span>Win rate</span>
+                    <strong>${winRate.toFixed(0)}%</strong>
+                </div>
 
+                <div class="winRateBar">
+                    <div class="winRateFill" style="width:${Math.min(winRate, 100)}%"></div>
+                </div>
+
+            </div>
             <div class="nextWinCard">
                 <div>
                     <span class="nextWinLabel">Bij volgende win</span>
