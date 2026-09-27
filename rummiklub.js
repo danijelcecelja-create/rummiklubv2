@@ -53,11 +53,14 @@ function showPlayerInfo(naam, isMember)
 
     if (isMember)
     {
+        
         const position = members.filter(player =>
-            Number(player.score) < scoreNextWin
-        ).length + 1;
-
-        details += ` - ${position}e`;
+                    Number(player.score) < scoreNextWin
+                ).length;
+        
+        
+        const positionStr = position === 0 ? "🥇" : position === 1 ? "🥈" : position === 2 ? "🥉" : position + 1;
+        details += ` - ${positionStr}`;
     }
 
     document.getElementById("playerInfoDetails").textContent = details;
