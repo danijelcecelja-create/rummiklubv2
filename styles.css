@@ -272,14 +272,14 @@
 .winRateSection {
     background: #f5f5f5;
     border-radius: 12px;
-    padding: 14px 16px;
+    
 }
 
 .winRateHeader {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 9px;
+    
     font-size: 15px;
 }
 
@@ -305,7 +305,7 @@
 .winRateSub {
     font-size: 12px;
     color: #888;
-    margin-top: 7px;
+    
 }
 
 .statGrid {
