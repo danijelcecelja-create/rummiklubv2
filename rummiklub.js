@@ -33,32 +33,11 @@ function showPlayerInfo(naam, isMember)
     const punten = Number(speler.punten) || 0;
     const score = Number(speler.score) || 0;
 
-    const winRate = spellen > 0
-        ? (wins / spellen) * 100
-        : 0;
-
-    const scoreNextWin = punten / (spellen + 1);
-
-    let positionStr = "";
-
-    if (isMember)
-    {
-        const position = members.filter(player =>
-            Number(player.score) < scoreNextWin
-        ).length;
-
-        positionStr =
-            position === 0 ? "🥇 1e" :
-            position === 1 ? "🥈 2e" :
-            position === 2 ? "🥉 3e" :
-            `${position + 1}e`;
-    }
-
     document.getElementById("playerInfoName").textContent = speler.naam;
 
     const details = document.getElementById("playerInfoDetails");
 
-    details.innerHTML = `
+    let html = `
         <div class="playerStats">
 
             <div class="playerLastGame">
@@ -88,7 +67,27 @@ function showPlayerInfo(naam, isMember)
                 </div>
 
             </div>
+    `;
 
+    if (isMember)
+    {
+        const winRate = spellen > 0
+            ? (wins / spellen) * 100
+            : 0;
+
+        const scoreNextWin = punten / (spellen + 1);
+
+        const position = members.filter(player =>
+            Number(player.score) < scoreNextWin
+        ).length;
+
+        const positionStr =
+            position === 0 ? "🥇 1e" :
+            position === 1 ? "🥈 2e" :
+            position === 2 ? "🥉 3e" :
+            `${position + 1}e`;
+
+        html += `
             <div class="winRateSection">
 
                 <div class="winRateHeader">
@@ -97,7 +96,10 @@ function showPlayerInfo(naam, isMember)
                 </div>
 
                 <div class="winRateBar">
-                    <div class="winRateFill"></div>
+                    <div
+                        class="winRateFill"
+                        style="width:${Math.min(winRate, 100)}%">
+                    </div>
                 </div>
 
             </div>
@@ -109,23 +111,19 @@ function showPlayerInfo(naam, isMember)
                     <strong>${scoreNextWin.toFixed(1)}</strong>
                 </div>
 
-                ${isMember ? `
-                    <div class="nextWinPosition">
-                        ${positionStr}
-                    </div>
-                ` : ""}
+                <div class="nextWinPosition">
+                    ${positionStr}
+                </div>
 
             </div>
+        `;
+    }
 
+    html += `
         </div>
     `;
 
-    const winRateFill = details.querySelector(".winRateFill");
-
-    if (winRateFill)
-    {
-        winRateFill.style.width = `${Math.min(Math.max(winRate, 0), 100)}%`;
-    }
+    details.innerHTML = html;
 
     document.getElementById("playerInfoDialog").showModal();
 }
