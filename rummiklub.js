@@ -18,7 +18,6 @@ let memberTurns = "";
 let holdTimer = null;
 let holdPlayer = null;
 
-
 function showPlayerInfo(naam, isMember)
 {
     const players = isMember ? members : guests;
@@ -66,8 +65,6 @@ function showPlayerInfo(naam, isMember)
                 Laatste spel: ${formatLast(speler.last)}
             </div>
 
-            
-
             <div class="statGrid">
 
                 <div class="statCard">
@@ -91,18 +88,22 @@ function showPlayerInfo(naam, isMember)
                 </div>
 
             </div>
+
             <div class="winRateSection">
+
                 <div class="winRateHeader">
                     <span>Win rate</span>
                     <strong>${winRate.toFixed(0)}%</strong>
                 </div>
 
                 <div class="winRateBar">
-                    <div class="winRateFill" style="width:${Math.min(winRate, 100)}%"></div>
+                    <div class="winRateFill"></div>
                 </div>
 
             </div>
+
             <div class="nextWinCard">
+
                 <div>
                     <span class="nextWinLabel">Bij volgende win</span>
                     <strong>${scoreNextWin.toFixed(1)}</strong>
@@ -113,10 +114,18 @@ function showPlayerInfo(naam, isMember)
                         ${positionStr}
                     </div>
                 ` : ""}
+
             </div>
 
         </div>
     `;
+
+    const winRateFill = details.querySelector(".winRateFill");
+
+    if (winRateFill)
+    {
+        winRateFill.style.width = `${Math.min(Math.max(winRate, 0), 100)}%`;
+    }
 
     document.getElementById("playerInfoDialog").showModal();
 }
