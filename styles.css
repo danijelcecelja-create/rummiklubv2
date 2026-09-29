@@ -412,7 +412,7 @@ input {
 #queueInfo {
     width: 100%;
     box-sizing: border-box;
-    padding: 0 12px;
+    padding: 0 20px 0 20px;
     margin: 0;
     
 }
