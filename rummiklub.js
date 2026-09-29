@@ -21,6 +21,11 @@ let memberTurns = "";
 let holdTimer = null;
 let holdPlayer = null;
 
+let queueLogs = [];
+let queueSending = false;
+let queueFetching = false;
+let queueFetchFailed = false;
+
 class QueueHandler
 {
     constructor()
@@ -35,7 +40,20 @@ class QueueHandler
         try
         {
             const data = localStorage.getItem(queueStorageKey);
-            return data ? JSON.parse(data) : [];
+
+            if (!data)
+            {
+                return [];
+            }
+
+            const queue = JSON.parse(data);
+
+            if (!Array.isArray(queue))
+            {
+                return [];
+            }
+
+            return queue;
         }
         catch (error)
         {
@@ -46,10 +64,17 @@ class QueueHandler
 
     save()
     {
-        localStorage.setItem(
-            queueStorageKey,
-            JSON.stringify(this.queue)
-        );
+        try
+        {
+            localStorage.setItem(
+                queueStorageKey,
+                JSON.stringify(this.queue)
+            );
+        }
+        catch (error)
+        {
+            console.error("Queue save failed", error);
+        }
     }
 
     add(request)
@@ -65,7 +90,9 @@ class QueueHandler
         this.queue.push(item);
         this.save();
 
-        console.log("Queue: added", item);
+        addQueueLog(
+            `Toegevoegd aan wachtrij: ${item.payload.action}`
+        );
 
         this.process();
 
@@ -74,7 +101,9 @@ class QueueHandler
 
     remove(id)
     {
-        this.queue = this.queue.filter(item => item.id !== id);
+        this.queue =
+            this.queue.filter(item => item.id !== id);
+
         this.save();
     }
 
@@ -87,6 +116,7 @@ class QueueHandler
 
         if (!this.queue.length)
         {
+            renderQueueInfo();
             return;
         }
 
@@ -98,56 +128,88 @@ class QueueHandler
             {
                 const item = this.queue[0];
 
-                console.log("Queue: processing", item);
+                item.attempts++;
+                this.save();
+
+                queueFetchFailed = false;
+
+                addQueueLog(
+                    `Verzenden: ${item.payload.action} poging ${item.attempts}`
+                );
 
                 try
                 {
-                    item.attempts++;
-                    this.save();
+                    setQueueSending(true);
 
-                    const response = await apiPost(item.payload);
+                    const response = await apiPost(
+                        item.payload
+                    );
 
                     if (!response.ok)
                     {
-                        throw new Error(`HTTP ${response.status}`);
+                        throw new Error(
+                            `HTTP ${response.status}`
+                        );
                     }
 
-                    const result = await response.json();
+                    const result =
+                        await response.json();
 
                     if (result.success !== true)
                     {
-                        throw new Error("Server rejected request");
+                        throw new Error(
+                            "Server rejected request"
+                        );
                     }
 
-                    console.log(
-                        "Queue: completed",
-                        item.id,
-                        result
+                    addQueueLog(
+                        `Geslaagd: ${item.payload.action}`
                     );
 
                     this.remove(item.id);
+
+                    queueFetchFailed = false;
 
                     await loadPlayers(true);
                 }
                 catch (error)
                 {
                     console.error(
-                        "Queue: failed",
+                        "Queue request failed",
                         item.id,
                         error
                     );
 
+                    addQueueLog(
+                        `Mislukt: ${item.payload.action} - ${error.message}`
+                    );
+
                     this.save();
 
-                    this.scheduleRetry();
-
                     break;
+                }
+                finally
+                {
+                    setQueueSending(false);
                 }
             }
         }
         finally
         {
             this.processing = false;
+
+            if (this.queue.length)
+            {
+                addQueueLog(
+                    `${this.queue.length} verzoek(en) wachten op retry`
+                );
+
+                this.scheduleRetry();
+            }
+            else
+            {
+                renderQueueInfo();
+            }
         }
     }
 
@@ -160,8 +222,8 @@ class QueueHandler
 
         const delay = this.getRetryDelay();
 
-        console.log(
-            `Queue: retry scheduled in ${delay / 1000}s`
+        addQueueLog(
+            `Retry over ${Math.round(delay / 1000)}s`
         );
 
         this.retryTimer = setTimeout(() =>
@@ -178,7 +240,8 @@ class QueueHandler
             return 5000;
         }
 
-        const attempts = this.queue[0].attempts;
+        const attempts =
+            Number(this.queue[0].attempts) || 0;
 
         if (attempts <= 1) return 5000;
         if (attempts <= 2) return 15000;
@@ -193,11 +256,15 @@ class QueueHandler
     {
         if (this.queue.length)
         {
-            console.log(
-                `Queue: ${this.queue.length} pending request(s)`
+            addQueueLog(
+                `${this.queue.length} opgeslagen verzoek(en) gevonden`
             );
 
             this.process();
+        }
+        else
+        {
+            renderQueueInfo();
         }
     }
 }
@@ -213,7 +280,8 @@ class DataCache
     {
         try
         {
-            const data = localStorage.getItem(rankingCacheKey);
+            const data =
+                localStorage.getItem(rankingCacheKey);
 
             if (!data)
             {
@@ -224,7 +292,11 @@ class DataCache
         }
         catch (error)
         {
-            console.error("Cache load failed", error);
+            console.error(
+                "Cache load failed",
+                error
+            );
+
             return null;
         }
     }
@@ -240,13 +312,16 @@ class DataCache
 
             this.data = data;
 
-            console.log(
-                "Cache: ranking updated"
+            addQueueLog(
+                "Cache bijgewerkt"
             );
         }
         catch (error)
         {
-            console.error("Cache save failed", error);
+            console.error(
+                "Cache save failed",
+                error
+            );
         }
     }
 
@@ -264,10 +339,6 @@ class DataCache
 const queueHandler = new QueueHandler();
 const dataCache = new DataCache();
 
-let queueLogs = [];
-let queueSending = false;
-let queueFetching = false;
-
 function addQueueLog(message)
 {
     const time = new Date();
@@ -277,13 +348,15 @@ function addQueueLog(message)
         `${String(time.getMinutes()).padStart(2, "0")}:` +
         `${String(time.getSeconds()).padStart(2, "0")}`;
 
-    const line = `${timestamp} ${message}`;
+    const line =
+        `${timestamp} ${message}`;
 
     queueLogs.unshift(line);
 
     if (queueLogs.length > 10)
     {
-        queueLogs = queueLogs.slice(0, 10);
+        queueLogs =
+            queueLogs.slice(0, 10);
     }
 
     console.log(line);
@@ -305,59 +378,110 @@ function setQueueFetching(value)
 
 function renderQueueInfo()
 {
-    const icon = document.getElementById("queueStatusIcon");
-    const text = document.getElementById("queueStatusText");
-    const logs = document.getElementById("queueLogs");
+    const icon =
+        document.getElementById("queueStatusIcon");
+
+    const text =
+        document.getElementById("queueStatusText");
+
+    const logs =
+        document.getElementById("queueLogs");
 
     if (!icon || !text || !logs)
     {
         return;
     }
 
+    const hasPending =
+        queueHandler.queue.length > 0;
+
     if (queueSending)
     {
-        icon.innerHTML = `<span class="queueSpinner"></span>`;
-        text.textContent = "Verzenden...";
+        icon.innerHTML =
+            `<span class="queueSpinner"></span>`;
+
+        text.textContent =
+            "Verzenden...";
+    }
+    else if (hasPending)
+    {
+        icon.innerHTML =
+            `<span class="queueSpinner"></span>`;
+
+        text.textContent =
+            "Pending...";
     }
     else if (queueFetching)
     {
-        icon.innerHTML = `<span class="queueSpinner"></span>`;
-        text.textContent = "Ophalen...";
+        icon.innerHTML =
+            `<span class="queueSpinner"></span>`;
+
+        text.textContent =
+            "Ophalen...";
+    }
+    else if (queueFetchFailed)
+    {
+        icon.textContent = "!";
+        text.textContent =
+            "Ophalen mislukt";
     }
     else
     {
         icon.textContent = "✓";
-        text.textContent = "Up-to-date";
+        text.textContent =
+            "Up-to-date";
     }
 
-    logs.innerHTML = queueLogs
-        .map(line => `<div class="queueLogLine">${line}</div>`)
-        .join("");
+    logs.innerHTML =
+        queueLogs
+            .map(line =>
+                `<div class="queueLogLine">${line}</div>`
+            )
+            .join("");
 }
 
 function toggleQueueInfo()
 {
-    document.getElementById("queueInfo").classList.toggle("expanded");
+    document
+        .getElementById("queueInfo")
+        .classList.toggle("expanded");
 }
 
 function showPlayerInfo(naam, isMember)
 {
-    const players = isMember ? members : guests;
-    const speler = players.find(player => player.naam === naam);
+    const players =
+        isMember ? members : guests;
+
+    const speler =
+        players.find(
+            player => player.naam === naam
+        );
 
     if (!speler)
     {
         return;
     }
 
-    const spellen = Number(speler.spellen) || 0;
-    const wins = Number(speler.wins) || 0;
-    const punten = Number(speler.punten) || 0;
-    const score = Number(speler.score) || 0;
+    const spellen =
+        Number(speler.spellen) || 0;
 
-    document.getElementById("playerInfoName").textContent = speler.naam;
+    const wins =
+        Number(speler.wins) || 0;
 
-    const details = document.getElementById("playerInfoDetails");
+    const punten =
+        Number(speler.punten) || 0;
+
+    const score =
+        Number(speler.score) || 0;
+
+    document.getElementById(
+        "playerInfoName"
+    ).textContent = speler.naam;
+
+    const details =
+        document.getElementById(
+            "playerInfoDetails"
+        );
 
     let html = `
         <div class="playerStats">
@@ -393,21 +517,29 @@ function showPlayerInfo(naam, isMember)
 
     if (isMember)
     {
-        const winRate = spellen > 0
-            ? (wins / spellen) * 100
-            : 0;
+        const winRate =
+            spellen > 0
+                ? (wins / spellen) * 100
+                : 0;
 
-        const scoreNextWin = punten / (spellen + 1);
+        const scoreNextWin =
+            punten / (spellen + 1);
 
-        const position = members.filter(player =>
-            Number(player.score) < scoreNextWin
-        ).length;
+        const position =
+            members.filter(
+                player =>
+                    Number(player.score) <
+                    scoreNextWin
+            ).length;
 
         const positionStr =
-            position === 0 ? "🥇 1e" :
-            position === 1 ? "🥈 2e" :
-            position === 2 ? "🥉 3e" :
-            `${position + 1}e`;
+            position === 0
+                ? "🥇 1e"
+                : position === 1
+                    ? "🥈 2e"
+                    : position === 2
+                        ? "🥉 3e"
+                        : `${position + 1}e`;
 
         html += `
             <div class="winRateSection">
@@ -420,7 +552,10 @@ function showPlayerInfo(naam, isMember)
                 <div class="winRateBar">
                     <div
                         class="winRateFill"
-                        style="width:${Math.min(winRate, 100)}%">
+                        style="width:${Math.min(
+                            winRate,
+                            100
+                        )}%">
                     </div>
                 </div>
 
@@ -429,8 +564,13 @@ function showPlayerInfo(naam, isMember)
             <div class="nextWinCard">
 
                 <div>
-                    <span class="nextWinLabel">Bij volgende win</span>
-                    <strong>${scoreNextWin.toFixed(1)}</strong>
+                    <span class="nextWinLabel">
+                        Bij volgende win
+                    </span>
+
+                    <strong>
+                        ${scoreNextWin.toFixed(1)}
+                    </strong>
                 </div>
 
                 <div class="nextWinPosition">
@@ -447,34 +587,55 @@ function showPlayerInfo(naam, isMember)
 
     details.innerHTML = html;
 
-    document.getElementById("playerInfoDialog").showModal();
+    document
+        .getElementById("playerInfoDialog")
+        .showModal();
 }
 
 function formatLast(value)
 {
-    if (!value) return "";
+    if (!value)
+    {
+        return "";
+    }
 
-    const d = new Date(value);
+    const d =
+        new Date(value);
 
-    if (Number.isNaN(d.getTime())) return "";
+    if (Number.isNaN(d.getTime()))
+    {
+        return "";
+    }
 
-    const days = ["zo", "ma", "di", "wo", "do", "vr", "za"];
-    const months = [
-        "jan",
-        "feb",
-        "mrt",
-        "apr",
-        "mei",
-        "jun",
-        "jul",
-        "aug",
-        "sept",
-        "okt",
-        "nov",
-        "dec"
-    ];
+    const days =
+        [
+            "zo",
+            "ma",
+            "di",
+            "wo",
+            "do",
+            "vr",
+            "za"
+        ];
 
-    const pad = n => String(n).padStart(2, "0");
+    const months =
+        [
+            "jan",
+            "feb",
+            "mrt",
+            "apr",
+            "mei",
+            "jun",
+            "jul",
+            "aug",
+            "sept",
+            "okt",
+            "nov",
+            "dec"
+        ];
+
+    const pad =
+        n => String(n).padStart(2, "0");
 
     return `${days[d.getDay()]} ${pad(d.getDate())} ${months[d.getMonth()]} ${String(d.getFullYear()).slice(-2)} ${pad(d.getHours())}u${pad(d.getMinutes())}`;
 }
@@ -483,12 +644,18 @@ function startHold(name)
 {
     holdPlayer = name;
 
-    holdTimer = setTimeout(() =>
-    {
-        setCookie("playerName", holdPlayer);
-        holdPlayer = null;
-        render();
-    }, 400);
+    holdTimer =
+        setTimeout(() =>
+        {
+            setCookie(
+                "playerName",
+                holdPlayer
+            );
+
+            holdPlayer = null;
+
+            render();
+        }, 400);
 }
 
 function cancelHold()
@@ -502,12 +669,21 @@ function cancelHold()
     holdPlayer = null;
 }
 
-function setCookie(name, value, days = 3650)
+function setCookie(
+    name,
+    value,
+    days = 3650
+)
 {
     const d = new Date();
 
     d.setTime(
-        d.getTime() + days * 24 * 60 * 60 * 1000
+        d.getTime() +
+        days *
+        24 *
+        60 *
+        60 *
+        1000
     );
 
     document.cookie =
@@ -516,94 +692,107 @@ function setCookie(name, value, days = 3650)
 
 function getCookie(name)
 {
-    const match = document.cookie
-        .split("; ")
-        .find(r => r.startsWith(name + "="));
+    const match =
+        document.cookie
+            .split("; ")
+            .find(
+                r => r.startsWith(
+                    name + "="
+                )
+            );
 
-    if (!match) return null;
+    if (!match)
+    {
+        return null;
+    }
 
-    return decodeURIComponent(match.split("=")[1]);
+    return decodeURIComponent(
+        match.split("=")[1]
+    );
 }
 
 function cleanPlayerName(name)
 {
-    if (!name) return "";
+    if (!name)
+    {
+        return "";
+    }
 
     return name
         .trim()
         .toLowerCase()
         .split(" ")
         .filter(Boolean)
-        .map(p =>
-            p.charAt(0).toUpperCase() + p.slice(1)
+        .map(
+            p =>
+                p.charAt(0).toUpperCase() +
+                p.slice(1)
         )
         .join(" ");
 }
 
 function formatTimestamp(d)
 {
-    const pad = n => String(n).padStart(2, "0");
+    const pad =
+        n => String(n).padStart(2, "0");
 
     return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
 }
 
 async function apiPost(payload)
 {
-    setQueueSending(true);
+    const response =
+        await fetch(
+            apiUrl,
+            {
+                method: "POST",
+                body: JSON.stringify(payload)
+            }
+        );
 
-    addQueueLog(`Sending ${payload.action}`);
-
-    try
-    {
-        const response = await fetch(apiUrl,
-        {
-            method: "POST",
-            body: JSON.stringify(payload)
-        });
-
-        if (!response.ok)
-        {
-            throw new Error(`HTTP ${response.status}`);
-        }
-
-        addQueueLog(`${payload.action} succeeded`);
-
-        return response;
-    }
-    catch (error)
-    {
-        addQueueLog(`${payload.action} failed: ${error.message}`);
-        throw error;
-    }
-    finally
-    {
-        setQueueSending(false);
-    }
+    return response;
 }
 
 async function readRanking()
 {
     setQueueFetching(true);
-    addQueueLog("Fetching ranking");
+    queueFetchFailed = false;
+
+    addQueueLog(
+        "Ophalen ranking"
+    );
 
     try
     {
-        const response = await fetch(`${apiUrl}?action=readRanking`);
+        const response =
+            await fetch(
+                `${apiUrl}?action=readRanking`
+            );
 
         if (!response.ok)
         {
-            throw new Error(`HTTP ${response.status}`);
+            throw new Error(
+                `HTTP ${response.status}`
+            );
         }
 
-        const data = await response.json();
+        const data =
+            await response.json();
 
-        addQueueLog("Ranking fetched");
+        addQueueLog(
+            "Ranking opgehaald"
+        );
 
         return data;
     }
     catch (error)
     {
-        addQueueLog(`Fetch failed: ${error.message}`);
+        queueFetchFailed = true;
+
+        addQueueLog(
+            `Ophalen mislukt: ${error.message}`
+        );
+
         throw error;
     }
     finally
@@ -614,51 +803,74 @@ async function readRanking()
 
 function applyRankingData(data)
 {
-    const membersRaw = data.members;
-    const guestsRaw = data.guests;
-    const paramsRaw = data.params;
+    const membersRaw =
+        data.members;
 
-    const extract = data =>
-    {
-        if (!Array.isArray(data) || data.length === 0)
+    const guestsRaw =
+        data.guests;
+
+    const paramsRaw =
+        data.params;
+
+    const extract =
+        data =>
         {
+            if (
+                !Array.isArray(data) ||
+                data.length === 0
+            )
+            {
+                return {
+                    headers: [],
+                    rows: []
+                };
+            }
+
             return {
-                headers: [],
-                rows: []
+                headers: data[0],
+                rows: data.slice(1)
             };
-        }
-
-        return {
-            headers: data[0],
-            rows: data.slice(1)
         };
-    };
 
-    const membersSplit = extract(membersRaw);
-    const guestsSplit = extract(guestsRaw);
+    const membersSplit =
+        extract(membersRaw);
 
-    membersHeaders = membersSplit.headers;
-    guestsHeaders = guestsSplit.headers;
+    const guestsSplit =
+        extract(guestsRaw);
 
-    const mapRow = r =>
-    ({
-        naam: r[0],
-        score: Number(r[1]) || 0,
-        spellen: Number(r[2]) || 0,
-        wins: Number(r[3]) || 0,
-        punten: Number(r[4]) || 0,
-        last: r[5]
-    });
+    membersHeaders =
+        membersSplit.headers;
 
-    members = membersSplit.rows
-        .filter(r => r && r[0])
-        .map(mapRow);
+    guestsHeaders =
+        guestsSplit.headers;
 
-    guests = guestsSplit.rows
-        .filter(r => r && r[0])
-        .map(mapRow);
+    const mapRow =
+        r =>
+        ({
+            naam: r[0],
+            score: Number(r[1]) || 0,
+            spellen: Number(r[2]) || 0,
+            wins: Number(r[3]) || 0,
+            punten: Number(r[4]) || 0,
+            last: r[5]
+        });
 
-    memberTurns = paramsRaw?.[0]?.[1] || "";
+    members =
+        membersSplit.rows
+            .filter(
+                r => r && r[0]
+            )
+            .map(mapRow);
+
+    guests =
+        guestsSplit.rows
+            .filter(
+                r => r && r[0]
+            )
+            .map(mapRow);
+
+    memberTurns =
+        paramsRaw?.[0]?.[1] || "";
 
     render();
 }
@@ -667,49 +879,77 @@ async function loadPlayers(background = false)
 {
     if (!background)
     {
-        const cached = dataCache.get();
+        const cached =
+            dataCache.get();
 
         if (cached)
         {
-            console.log("Cache: rendering cached ranking");
-            applyRankingData(cached);
+            addQueueLog(
+                "Cache gebruikt"
+            );
+
+            applyRankingData(
+                cached
+            );
         }
 
-        document.getElementById("loader").style.display =
+        document.getElementById(
+            "loader"
+        ).style.display =
             cached ? "none" : "flex";
     }
 
     try
     {
-        const data = await readRanking();
+        const data =
+            await readRanking();
 
         dataCache.save(data);
 
         applyRankingData(data);
+
+        queueFetchFailed = false;
+
+        renderQueueInfo();
     }
     catch (error)
     {
         console.error(
-            "Fetch: ranking failed",
+            "Fetch ranking failed",
             error
         );
     }
     finally
     {
-        document.getElementById("loader").style.display = "none";
+        document.getElementById(
+            "loader"
+        ).style.display = "none";
+
+        renderQueueInfo();
     }
 }
 
 function render()
 {
-    const main = document.getElementById("rankingMain");
-    const secondary = document.getElementById("rankingSecondary");
+    const main =
+        document.getElementById(
+            "rankingMain"
+        );
+
+    const secondary =
+        document.getElementById(
+            "rankingSecondary"
+        );
 
     const membersHeaderRow =
-        document.getElementById("membersHeaderRow");
+        document.getElementById(
+            "membersHeaderRow"
+        );
 
     const guestsHeaderRow =
-        document.getElementById("guestsHeaderRow");
+        document.getElementById(
+            "guestsHeaderRow"
+        );
 
     const currentPlayer =
         getCookie("playerName") || "";
@@ -721,9 +961,10 @@ function render()
     {
         membersHeaderRow.innerHTML = `
             <th>
-                <a href="https://docs.google.com/spreadsheets/u/0/?q=%22Rummiklub%25%22"
-                   target="_blank"
-                   style="color:inherit; text-decoration:none;">
+                <a
+                    href="https://docs.google.com/spreadsheets/u/0/?q=%22Rummiklub%25%22"
+                    target="_blank"
+                    style="color:inherit; text-decoration:none;">
                     <span class="rankingIndex">&nbsp;</span>${membersHeaders[0] ?? ""}
                 </a>
             </th>
@@ -738,9 +979,10 @@ function render()
     {
         guestsHeaderRow.innerHTML = `
             <th>
-                <a href="https://docs.google.com/spreadsheets/u/0/?q=%22Rummiklub%25%22"
-                   target="_blank"
-                   style="color:inherit; text-decoration:none;">
+                <a
+                    href="https://docs.google.com/spreadsheets/u/0/?q=%22Rummiklub%25%22"
+                    target="_blank"
+                    style="color:inherit; text-decoration:none;">
                     <span class="rankingIndex">&nbsp;</span>${guestsHeaders[0] ?? ""}
                 </a>
             </th>
@@ -751,60 +993,87 @@ function render()
         `;
     }
 
-    document.getElementById("memberTurnsText").textContent =
+    document.getElementById(
+        "memberTurnsText"
+    ).textContent =
         memberTurns;
 
-    const renderRows = (players, target, isMembers) =>
-    {
-        let html = "";
-
-        players.forEach((speler, index) =>
+    const renderRows =
+        (
+            players,
+            target,
+            isMembers
+        ) =>
         {
-            const isOwner =
-                speler.naam === currentPlayer;
+            let html = "";
 
-            html += `
-                <tr>
-                    <td
-                        class="playerName"
-                        title="${formatLast(speler.last)} ${speler.punten}"
-                        onclick="showPlayerInfo('${speler.naam}', ${isMembers})">
-                        <span class="rankingIndex">${isMembers
-                            ? (
-                                index === 0
-                                    ? "🥇"
-                                    : index === 1
-                                        ? "🥈"
-                                        : index === 2
-                                            ? "🥉"
-                                            : index + 1
-                            )
-                            : "&nbsp;"}</span>${speler.naam}
-                    </td>
+            players.forEach(
+                (speler, index) =>
+                {
+                    const isOwner =
+                        speler.naam ===
+                        currentPlayer;
 
-                    <td><b>${speler.score}</b></td>
-                    <td>${speler.spellen}</td>
-                    <td>${speler.wins}</td>
+                    html += `
+                        <tr>
 
-                    <td>
-                        <button
-                            class="plusBtn ${isOwner ? "" : "disabled"}"
-                            onclick="if(${isOwner}) showAddScore('${speler.naam}')"
-                            onmousedown="startHold('${speler.naam}', event)"
-                            onmouseup="cancelHold()"
-                            onmouseleave="cancelHold()"
-                            ontouchstart="startHold('${speler.naam}', event)"
-                            ontouchend="cancelHold()"
-                        >
-                            ${isOwner ? "+" : "-"}
-                        </button>
-                    </td>
-                </tr>
-            `;
-        });
+                            <td
+                                class="playerName"
+                                title="${formatLast(speler.last)} ${speler.punten}"
+                                onclick="showPlayerInfo('${speler.naam}', ${isMembers})">
 
-        target.innerHTML = html;
-    };
+                                <span class="rankingIndex">${
+                                    isMembers
+                                        ? (
+                                            index === 0
+                                                ? "🥇"
+                                                : index === 1
+                                                    ? "🥈"
+                                                    : index === 2
+                                                        ? "🥉"
+                                                        : index + 1
+                                        )
+                                        : "&nbsp;"
+                                }</span>${speler.naam}
+
+                            </td>
+
+                            <td>
+                                <b>${speler.score}</b>
+                            </td>
+
+                            <td>
+                                ${speler.spellen}
+                            </td>
+
+                            <td>
+                                ${speler.wins}
+                            </td>
+
+                            <td>
+
+                                <button
+                                    class="plusBtn ${isOwner ? "" : "disabled"}"
+                                    onclick="if(${isOwner}) showAddScore('${speler.naam}')"
+                                    onmousedown="startHold('${speler.naam}', event)"
+                                    onmouseup="cancelHold()"
+                                    onmouseleave="cancelHold()"
+                                    ontouchstart="startHold('${speler.naam}', event)"
+                                    ontouchend="cancelHold()"
+                                >
+                                    ${isOwner ? "+" : "-"}
+                                </button>
+
+                            </td>
+
+                        </tr>
+                    `;
+                }
+            );
+
+            target.innerHTML =
+                html;
+        };
 
     renderRows(
         members,
@@ -818,42 +1087,70 @@ function render()
         false
     );
 
-    document.getElementById("mainTable").style.display =
-        members.length ? "table" : "none";
+    document.getElementById(
+        "mainTable"
+    ).style.display =
+        members.length
+            ? "table"
+            : "none";
 
-    document.getElementById("secondaryTable").style.display =
-        guests.length ? "table" : "none";
+    document.getElementById(
+        "secondaryTable"
+    ).style.display =
+        guests.length
+            ? "table"
+            : "none";
 }
 
 function showAddScore(naam)
 {
-    selectedPlayer = naam;
+    selectedPlayer =
+        naam;
 
-    document.getElementById("scoreInput").value = "";
+    document.getElementById(
+        "scoreInput"
+    ).value = "";
 
-    document.getElementById("scoreDialog").showModal();
+    document.getElementById(
+        "scoreDialog"
+    ).showModal();
 }
 
 function showAddPlayer()
 {
-    document.getElementById("playerNameInput").value = "";
-    document.getElementById("playerScoreInput").value = "";
+    document.getElementById(
+        "playerNameInput"
+    ).value = "";
 
-    document.getElementById("playerDialog").showModal();
+    document.getElementById(
+        "playerScoreInput"
+    ).value = "";
+
+    document.getElementById(
+        "playerDialog"
+    ).showModal();
 }
 
 function closeDialogs()
 {
-    document.getElementById("scoreDialog").close();
-    document.getElementById("playerDialog").close();
+    document.getElementById(
+        "scoreDialog"
+    ).close();
+
+    document.getElementById(
+        "playerDialog"
+    ).close();
 }
 
 async function saveScore()
 {
     const input =
-        document.getElementById("scoreInput").value;
+        document.getElementById(
+            "scoreInput"
+        ).value;
 
-    const punten = parsePunten(input);
+    const punten =
+        parsePunten(input);
 
     if (punten === null)
     {
@@ -861,7 +1158,9 @@ async function saveScore()
     }
 
     const timestamp =
-        formatTimestamp(new Date());
+        formatTimestamp(
+            new Date()
+        );
 
     const key =
         `${selectedPlayer}-${timestamp}`;
@@ -890,19 +1189,29 @@ async function saveScore()
 
 async function savePlayer()
 {
-    const naam = cleanPlayerName(
-        document.getElementById("playerNameInput").value
-    );
+    const naam =
+        cleanPlayerName(
+            document.getElementById(
+                "playerNameInput"
+            ).value
+        );
 
     const puntenInput =
-        document.getElementById("playerScoreInput").value;
+        document.getElementById(
+            "playerScoreInput"
+        ).value;
 
     const punten =
-        parsePunten(puntenInput);
+        parsePunten(
+            puntenInput
+        );
 
     if (!naam)
     {
-        alert("Voer een naam in");
+        alert(
+            "Voer een naam in"
+        );
+
         return;
     }
 
@@ -911,23 +1220,29 @@ async function savePlayer()
         return;
     }
 
-    if ([...members, ...guests]
-        .some(x =>
-            x.naam.toLowerCase() === naam.toLowerCase()
-        ))
+    if (
+        [...members, ...guests]
+            .some(
+                x =>
+                    x.naam.toLowerCase() ===
+                    naam.toLowerCase()
+            )
+    )
     {
-        alert("Speler bestaat al");
+        alert(
+            "Speler bestaat al"
+        );
+
         return;
     }
 
     const timestamp =
-        formatTimestamp(new Date());
+        formatTimestamp(
+            new Date()
+        );
 
     const playerId =
         `player-${naam}-${timestamp}`;
-
-    const gameId =
-        `${naam}-${timestamp}`;
 
     const payload =
     {
@@ -953,11 +1268,15 @@ async function savePlayer()
 
 function parsePunten(input)
 {
-    const value = input.trim();
+    const value =
+        input.trim();
 
     if (!value)
     {
-        alert("Voer een score in");
+        alert(
+            "Voer een score in"
+        );
+
         return null;
     }
 
@@ -966,7 +1285,10 @@ function parsePunten(input)
 
     if (!values)
     {
-        alert("Voer een geldige score in");
+        alert(
+            "Voer een geldige score in"
+        );
+
         return null;
     }
 
@@ -979,7 +1301,10 @@ function parsePunten(input)
 
     if (!Number.isSafeInteger(punten))
     {
-        alert("Score is te groot");
+        alert(
+            "Score is te groot"
+        );
+
         return null;
     }
 
