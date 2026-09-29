@@ -8,8 +8,8 @@ window.closeDialogs = closeDialogs;
 
 const apiUrl = "https://script.google.com/macros/s/AKfycbyW3a0PLGXdRIbZhi1tBydf997MBmmPHoQXq1Sd5u_oEyHbAGezwKYphacRkQSBX3JM/exec";
 
-
-
+const rankingCacheKey = "rummiklub_ranking_cache";
+const queueStorageKey = "rummiklub_submit_queue";
 
 let members = [];
 let guests = [];
@@ -20,6 +20,249 @@ let memberTurns = "";
 
 let holdTimer = null;
 let holdPlayer = null;
+
+class QueueHandler
+{
+    constructor()
+    {
+        this.queue = this.load();
+        this.processing = false;
+        this.retryTimer = null;
+    }
+
+    load()
+    {
+        try
+        {
+            const data = localStorage.getItem(queueStorageKey);
+            return data ? JSON.parse(data) : [];
+        }
+        catch (error)
+        {
+            console.error("Queue load failed", error);
+            return [];
+        }
+    }
+
+    save()
+    {
+        localStorage.setItem(
+            queueStorageKey,
+            JSON.stringify(this.queue)
+        );
+    }
+
+    add(request)
+    {
+        const item =
+        {
+            id: request.id,
+            payload: request.payload,
+            created: Date.now(),
+            attempts: 0
+        };
+
+        this.queue.push(item);
+        this.save();
+
+        console.log("Queue: added", item);
+
+        this.process();
+
+        return item;
+    }
+
+    remove(id)
+    {
+        this.queue = this.queue.filter(item => item.id !== id);
+        this.save();
+    }
+
+    async process()
+    {
+        if (this.processing)
+        {
+            return;
+        }
+
+        if (!this.queue.length)
+        {
+            return;
+        }
+
+        this.processing = true;
+
+        try
+        {
+            while (this.queue.length)
+            {
+                const item = this.queue[0];
+
+                console.log("Queue: processing", item);
+
+                try
+                {
+                    item.attempts++;
+                    this.save();
+
+                    const response = await apiPost(item.payload);
+
+                    if (!response.ok)
+                    {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+
+                    const result = await response.json();
+
+                    if (result.success !== true)
+                    {
+                        throw new Error("Server rejected request");
+                    }
+
+                    console.log(
+                        "Queue: completed",
+                        item.id,
+                        result
+                    );
+
+                    this.remove(item.id);
+
+                    await loadPlayers(true);
+                }
+                catch (error)
+                {
+                    console.error(
+                        "Queue: failed",
+                        item.id,
+                        error
+                    );
+
+                    this.save();
+
+                    this.scheduleRetry();
+
+                    break;
+                }
+            }
+        }
+        finally
+        {
+            this.processing = false;
+        }
+    }
+
+    scheduleRetry()
+    {
+        if (this.retryTimer)
+        {
+            return;
+        }
+
+        const delay = this.getRetryDelay();
+
+        console.log(
+            `Queue: retry scheduled in ${delay / 1000}s`
+        );
+
+        this.retryTimer = setTimeout(() =>
+        {
+            this.retryTimer = null;
+            this.process();
+        }, delay);
+    }
+
+    getRetryDelay()
+    {
+        if (!this.queue.length)
+        {
+            return 5000;
+        }
+
+        const attempts = this.queue[0].attempts;
+
+        if (attempts <= 1) return 5000;
+        if (attempts <= 2) return 15000;
+        if (attempts <= 3) return 30000;
+        if (attempts <= 4) return 60000;
+        if (attempts <= 5) return 120000;
+
+        return 300000;
+    }
+
+    start()
+    {
+        if (this.queue.length)
+        {
+            console.log(
+                `Queue: ${this.queue.length} pending request(s)`
+            );
+
+            this.process();
+        }
+    }
+}
+
+class DataCache
+{
+    constructor()
+    {
+        this.data = this.load();
+    }
+
+    load()
+    {
+        try
+        {
+            const data = localStorage.getItem(rankingCacheKey);
+
+            if (!data)
+            {
+                return null;
+            }
+
+            return JSON.parse(data);
+        }
+        catch (error)
+        {
+            console.error("Cache load failed", error);
+            return null;
+        }
+    }
+
+    save(data)
+    {
+        try
+        {
+            localStorage.setItem(
+                rankingCacheKey,
+                JSON.stringify(data)
+            );
+
+            this.data = data;
+
+            console.log(
+                "Cache: ranking updated"
+            );
+        }
+        catch (error)
+        {
+            console.error("Cache save failed", error);
+        }
+    }
+
+    hasData()
+    {
+        return this.data !== null;
+    }
+
+    get()
+    {
+        return this.data;
+    }
+}
+
+const queueHandler = new QueueHandler();
+const dataCache = new DataCache();
 
 function showPlayerInfo(naam, isMember)
 {
@@ -140,7 +383,20 @@ function formatLast(value)
     if (Number.isNaN(d.getTime())) return "";
 
     const days = ["zo", "ma", "di", "wo", "do", "vr", "za"];
-    const months = ["jan", "feb", "mrt", "apr", "mei", "jun", "jul", "aug", "sept", "okt", "nov", "dec"];
+    const months = [
+        "jan",
+        "feb",
+        "mrt",
+        "apr",
+        "mei",
+        "jun",
+        "jul",
+        "aug",
+        "sept",
+        "okt",
+        "nov",
+        "dec"
+    ];
 
     const pad = n => String(n).padStart(2, "0");
 
@@ -173,7 +429,10 @@ function cancelHold()
 function setCookie(name, value, days = 3650)
 {
     const d = new Date();
-    d.setTime(d.getTime() + days * 24 * 60 * 60 * 1000);
+
+    d.setTime(
+        d.getTime() + days * 24 * 60 * 60 * 1000
+    );
 
     document.cookie =
         `${name}=${encodeURIComponent(value)}; expires=${d.toUTCString()}; path=/`;
@@ -199,7 +458,9 @@ function cleanPlayerName(name)
         .toLowerCase()
         .split(" ")
         .filter(Boolean)
-        .map(p => p.charAt(0).toUpperCase() + p.slice(1))
+        .map(p =>
+            p.charAt(0).toUpperCase() + p.slice(1)
+        )
         .join(" ");
 }
 
@@ -221,72 +482,105 @@ async function apiPost(payload)
 
 async function readRanking()
 {
-    const response = await fetch(`${apiUrl}?action=readRanking`);
+    console.log("Fetch: ranking started");
+
+    const response = await fetch(
+        `${apiUrl}?action=readRanking`
+    );
 
     if (!response.ok)
     {
         throw new Error(`HTTP ${response.status}`);
     }
 
-    return response.json();
+    const data = await response.json();
+
+    console.log("Fetch: ranking completed");
+
+    return data;
 }
 
-async function loadPlayers()
+function applyRankingData(data)
 {
-    document.getElementById("loader").style.display = "flex";
+    const membersRaw = data.members;
+    const guestsRaw = data.guests;
+    const paramsRaw = data.params;
+
+    const extract = data =>
+    {
+        if (!Array.isArray(data) || data.length === 0)
+        {
+            return {
+                headers: [],
+                rows: []
+            };
+        }
+
+        return {
+            headers: data[0],
+            rows: data.slice(1)
+        };
+    };
+
+    const membersSplit = extract(membersRaw);
+    const guestsSplit = extract(guestsRaw);
+
+    membersHeaders = membersSplit.headers;
+    guestsHeaders = guestsSplit.headers;
+
+    const mapRow = r =>
+    ({
+        naam: r[0],
+        score: Number(r[1]) || 0,
+        spellen: Number(r[2]) || 0,
+        wins: Number(r[3]) || 0,
+        punten: Number(r[4]) || 0,
+        last: r[5]
+    });
+
+    members = membersSplit.rows
+        .filter(r => r && r[0])
+        .map(mapRow);
+
+    guests = guestsSplit.rows
+        .filter(r => r && r[0])
+        .map(mapRow);
+
+    memberTurns = paramsRaw?.[0]?.[1] || "";
+
+    render();
+}
+
+async function loadPlayers(background = false)
+{
+    if (!background)
+    {
+        const cached = dataCache.get();
+
+        if (cached)
+        {
+            console.log("Cache: rendering cached ranking");
+            applyRankingData(cached);
+        }
+
+        document.getElementById("loader").style.display =
+            cached ? "none" : "flex";
+    }
 
     try
     {
         const data = await readRanking();
 
-        const membersRaw = data.members;
-        const guestsRaw = data.guests;
-        const paramsRaw = data.params;
+        dataCache.save(data);
 
-        const extract = data =>
-        {
-            if (!Array.isArray(data) || data.length === 0)
-            {
-                return { headers: [], rows: [] };
-            }
-
-            return {
-                headers: data[0],
-                rows: data.slice(1)
-            };
-        };
-
-        const membersSplit = extract(membersRaw);
-        const guestsSplit = extract(guestsRaw);
-
-        membersHeaders = membersSplit.headers;
-        guestsHeaders = guestsSplit.headers;
-
-        const mapRow = r =>
-        ({
-            naam: r[0],
-            score: Number(r[1]) || 0,
-            spellen: Number(r[2]) || 0,
-            wins: Number(r[3]) || 0,
-            punten: Number(r[4]) || 0,
-            last: r[5]
-        });
-
-        members = membersSplit.rows
-            .filter(r => r && r[0])
-            .map(mapRow);
-
-        guests = guestsSplit.rows
-            .filter(r => r && r[0])
-            .map(mapRow);
-
-        memberTurns = paramsRaw?.[0]?.[1] || "";
-
-        render();
+        applyRankingData(data);
     }
     catch (error)
     {
-        console.error(error);
+        console.error(
+            "Fetch: ranking failed",
+            error
+        );
     }
     finally
     {
@@ -299,10 +593,14 @@ function render()
     const main = document.getElementById("rankingMain");
     const secondary = document.getElementById("rankingSecondary");
 
-    const membersHeaderRow = document.getElementById("membersHeaderRow");
-    const guestsHeaderRow = document.getElementById("guestsHeaderRow");
+    const membersHeaderRow =
+        document.getElementById("membersHeaderRow");
 
-    const currentPlayer = getCookie("playerName") || "";
+    const guestsHeaderRow =
+        document.getElementById("guestsHeaderRow");
+
+    const currentPlayer =
+        getCookie("playerName") || "";
 
     main.innerHTML = "";
     secondary.innerHTML = "";
@@ -341,50 +639,72 @@ function render()
         `;
     }
 
-    document.getElementById("memberTurnsText").textContent = memberTurns;
+    document.getElementById("memberTurnsText").textContent =
+        memberTurns;
 
-    const renderRows = (players, target,isMembers) =>
+    const renderRows = (players, target, isMembers) =>
     {
         let html = "";
 
         players.forEach((speler, index) =>
         {
-            const isOwner = speler.naam === currentPlayer;
-            const ranking = index + 1;
+            const isOwner =
+                speler.naam === currentPlayer;
 
             html += `
-            <tr>
-                <td
-                    class="playerName"
-                    title="${formatLast(speler.last)} ${speler.punten}"
-                    onclick="showPlayerInfo('${speler.naam}', ${isMembers})">
-                    <span class="rankingIndex">${isMembers ? (index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : index + 1) : "&nbsp;"}</span>${speler.naam}
-                </td>
-                <td><b>${speler.score}</b></td>
-                <td>${speler.spellen}</td>
-                <td>${speler.wins}</td>
-                <td>
-                    <button
-                        class="plusBtn ${isOwner ? "" : "disabled"}"
-                        onclick="if(${isOwner}) showAddScore('${speler.naam}')"
-                        onmousedown="startHold('${speler.naam}', event)"
-                        onmouseup="cancelHold()"
-                        onmouseleave="cancelHold()"
-                        ontouchstart="startHold('${speler.naam}', event)"
-                        ontouchend="cancelHold()"
-                    >
-                        ${isOwner ? "+" : "-"}
-                    </button>
-                </td>
-            </tr>
-        `;
+                <tr>
+                    <td
+                        class="playerName"
+                        title="${formatLast(speler.last)} ${speler.punten}"
+                        onclick="showPlayerInfo('${speler.naam}', ${isMembers})">
+                        <span class="rankingIndex">${isMembers
+                            ? (
+                                index === 0
+                                    ? "🥇"
+                                    : index === 1
+                                        ? "🥈"
+                                        : index === 2
+                                            ? "🥉"
+                                            : index + 1
+                            )
+                            : "&nbsp;"}</span>${speler.naam}
+                    </td>
+
+                    <td><b>${speler.score}</b></td>
+                    <td>${speler.spellen}</td>
+                    <td>${speler.wins}</td>
+
+                    <td>
+                        <button
+                            class="plusBtn ${isOwner ? "" : "disabled"}"
+                            onclick="if(${isOwner}) showAddScore('${speler.naam}')"
+                            onmousedown="startHold('${speler.naam}', event)"
+                            onmouseup="cancelHold()"
+                            onmouseleave="cancelHold()"
+                            ontouchstart="startHold('${speler.naam}', event)"
+                            ontouchend="cancelHold()"
+                        >
+                            ${isOwner ? "+" : "-"}
+                        </button>
+                    </td>
+                </tr>
+            `;
         });
 
         target.innerHTML = html;
     };
 
-    renderRows(members, main,true);
-    renderRows(guests, secondary,false);
+    renderRows(
+        members,
+        main,
+        true
+    );
+
+    renderRows(
+        guests,
+        secondary,
+        false
+    );
 
     document.getElementById("mainTable").style.display =
         members.length ? "table" : "none";
@@ -418,56 +738,42 @@ function closeDialogs()
 
 async function saveScore()
 {
-    const input = document.getElementById("scoreInput").value;
+    const input =
+        document.getElementById("scoreInput").value;
+
     const punten = parsePunten(input);
 
-    if (punten === null) return;
-
-    const btn = document.querySelector("#scoreDialog .saveBtn");
-
-    btn.disabled = true;
-    btn.classList.add("btnLoading");
-    btn.innerHTML = `<span class="btnSpinner"></span>`;
-
-    try
+    if (punten === null)
     {
-        const timestamp = formatTimestamp(new Date());
-
-        const response = await apiPost(
-        {
-            action: "addRow",
-            sheetName: "GameTable",
-            data: [
-                `${selectedPlayer}-${timestamp}`,
-                selectedPlayer,
-                timestamp,
-                punten
-            ]
-        });
-
-        if (!response.ok)
-        {
-            throw new Error(`HTTP ${response.status}`);
-        }
-
-        closeDialogs();
-
-        await loadPlayers();
+        return;
     }
-    catch (error)
+
+    const timestamp =
+        formatTimestamp(new Date());
+
+    const key =
+        `${selectedPlayer}-${timestamp}`;
+
+    const payload =
     {
-        console.error(error);
-        alert("Opslaan mislukt");
-    }
-    finally
+        action: "addRow",
+        sheetName: "GameTable",
+        data:
+        [
+            key,
+            selectedPlayer,
+            timestamp,
+            punten
+        ]
+    };
+
+    queueHandler.add(
     {
-        setTimeout(() =>
-        {
-            btn.disabled = false;
-            btn.classList.remove("btnLoading");
-            btn.innerHTML = "Opslaan";
-        }, 10000);
-    }
+        id: key,
+        payload: payload
+    });
+
+    closeDialogs();
 }
 
 async function savePlayer()
@@ -476,8 +782,11 @@ async function savePlayer()
         document.getElementById("playerNameInput").value
     );
 
-    const puntenInput = document.getElementById("playerScoreInput").value;
-    const punten = parsePunten(puntenInput);
+    const puntenInput =
+        document.getElementById("playerScoreInput").value;
+
+    const punten =
+        parsePunten(puntenInput);
 
     if (!naam)
     {
@@ -485,58 +794,49 @@ async function savePlayer()
         return;
     }
 
-    if (punten === null) return;
+    if (punten === null)
+    {
+        return;
+    }
 
     if ([...members, ...guests]
-        .some(x => x.naam.toLowerCase() === naam.toLowerCase()))
+        .some(x =>
+            x.naam.toLowerCase() === naam.toLowerCase()
+        ))
     {
         alert("Speler bestaat al");
         return;
     }
 
-    const btn = document.querySelector("#playerDialog .saveBtn");
+    const timestamp =
+        formatTimestamp(new Date());
 
-    btn.disabled = true;
-    btn.classList.add("btnLoading");
-    btn.innerHTML = `<span class="btnSpinner"></span>`;
+    const playerId =
+        `player-${naam}-${timestamp}`;
 
-    try
+    const gameId =
+        `${naam}-${timestamp}`;
+
+    const payload =
     {
-        const timestamp = formatTimestamp(new Date());
+        action: "addPlayer",
+        name: naam,
+        timestamp: timestamp,
+        points: punten
+    };
 
-        const response = await apiPost(
-        {
-            action: "addPlayer",
-            name: naam,
-            timestamp: timestamp,
-            points: punten
-        });
-
-        if (!response.ok)
-        {
-            throw new Error(`HTTP ${response.status}`);
-        }
-
-        setCookie("playerName", naam);
-
-        closeDialogs();
-
-        await loadPlayers();
-    }
-    catch (error)
+    queueHandler.add(
     {
-        console.error(error);
-        alert("Opslaan mislukt");
-    }
-    finally
-    {
-        setTimeout(() =>
-        {
-            btn.disabled = false;
-            btn.classList.remove("btnLoading");
-            btn.innerHTML = "Opslaan";
-        }, 10000);
-    }
+        id: playerId,
+        payload: payload
+    });
+
+    setCookie(
+        "playerName",
+        naam
+    );
+
+    closeDialogs();
 }
 
 function parsePunten(input)
@@ -549,7 +849,8 @@ function parsePunten(input)
         return null;
     }
 
-    const values = value.match(/\d+/g);
+    const values =
+        value.match(/\d+/g);
 
     if (!values)
     {
@@ -557,10 +858,12 @@ function parsePunten(input)
         return null;
     }
 
-    const punten = values.reduce(
-        (sum, value) => sum + Number(value),
-        0
-    );
+    const punten =
+        values.reduce(
+            (sum, value) =>
+                sum + Number(value),
+            0
+        );
 
     if (!Number.isSafeInteger(punten))
     {
@@ -571,4 +874,5 @@ function parsePunten(input)
     return punten;
 }
 
+queueHandler.start();
 loadPlayers();
