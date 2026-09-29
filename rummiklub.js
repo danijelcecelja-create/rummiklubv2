@@ -264,6 +264,88 @@ class DataCache
 const queueHandler = new QueueHandler();
 const dataCache = new DataCache();
 
+let queueLogs = [];
+let queueSending = false;
+let queueFetching = false;
+
+function addQueueLog(message)
+{
+    const time = new Date();
+
+    const timestamp =
+        `${String(time.getHours()).padStart(2, "0")}:` +
+        `${String(time.getMinutes()).padStart(2, "0")}:` +
+        `${String(time.getSeconds()).padStart(2, "0")}`;
+
+    const line = `${timestamp} ${message}`;
+
+    queueLogs.unshift(line);
+
+    if (queueLogs.length > 10)
+    {
+        queueLogs = queueLogs.slice(0, 10);
+    }
+
+    console.log(line);
+
+    renderQueueInfo();
+}
+
+function setQueueSending(value)
+{
+    queueSending = value;
+    renderQueueInfo();
+}
+
+function setQueueFetching(value)
+{
+    queueFetching = value;
+    renderQueueInfo();
+}
+
+function renderQueueInfo()
+{
+    const icon = document.getElementById("queueStatusIcon");
+    const text = document.getElementById("queueStatusText");
+    const logs = document.getElementById("queueLogs");
+
+    if (!icon || !text || !logs)
+    {
+        return;
+    }
+
+    if (queueSending)
+    {
+        icon.innerHTML = `<span class="queueSpinner"></span>`;
+        text.textContent = "Verzenden...";
+    }
+    else if (queueFetching)
+    {
+        icon.innerHTML = `<span class="queueSpinner"></span>`;
+        text.textContent = "Ophalen...";
+    }
+    else
+    {
+        icon.textContent = "✓";
+        text.textContent = "Up-to-date";
+    }
+
+    logs.innerHTML = queueLogs
+        .map(line => `<div class="queueLogLine">${line}</div>`)
+        .join("");
+}
+
+function toggleQueueInfo()
+{
+    const info = document.getElementById("queueInfo");
+    const icon = document.getElementById("queueExpandIcon");
+
+    info.classList.toggle("expanded");
+
+    icon.textContent =
+        info.classList.contains("expanded") ? "⌃" : "⌄";
+}
+
 function showPlayerInfo(naam, isMember)
 {
     const players = isMember ? members : guests;
@@ -473,31 +555,67 @@ function formatTimestamp(d)
 
 async function apiPost(payload)
 {
-    return fetch(apiUrl,
+    setQueueSending(true);
+
+    addQueueLog(`Sending ${payload.action}`);
+
+    try
     {
-        method: "POST",
-        body: JSON.stringify(payload)
-    });
+        const response = await fetch(apiUrl,
+        {
+            method: "POST",
+            body: JSON.stringify(payload)
+        });
+
+        if (!response.ok)
+        {
+            throw new Error(`HTTP ${response.status}`);
+        }
+
+        addQueueLog(`${payload.action} succeeded`);
+
+        return response;
+    }
+    catch (error)
+    {
+        addQueueLog(`${payload.action} failed: ${error.message}`);
+        throw error;
+    }
+    finally
+    {
+        setQueueSending(false);
+    }
 }
 
 async function readRanking()
 {
-    console.log("Fetch: ranking started");
+    setQueueFetching(true);
+    addQueueLog("Fetching ranking");
 
-    const response = await fetch(
-        `${apiUrl}?action=readRanking`
-    );
-
-    if (!response.ok)
+    try
     {
-        throw new Error(`HTTP ${response.status}`);
+        const response = await fetch(`${apiUrl}?action=readRanking`);
+
+        if (!response.ok)
+        {
+            throw new Error(`HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        addQueueLog("Ranking fetched");
+
+        return data;
     }
-
-    const data = await response.json();
-
-    console.log("Fetch: ranking completed");
-
-    return data;
+    catch (error)
+    {
+        addQueueLog(`Fetch failed: ${error.message}`);
+        throw error;
+    }
+    finally
+    {
+        setQueueFetching(false);
+    }
 }
 
 function applyRankingData(data)
