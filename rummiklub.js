@@ -378,66 +378,47 @@ function setQueueFetching(value)
 
 function renderQueueInfo()
 {
-    const icon =
-        document.getElementById("queueStatusIcon");
-
-    const text =
-        document.getElementById("queueStatusText");
-
-    const logs =
-        document.getElementById("queueLogs");
+    const icon = document.getElementById("queueStatusIcon");
+    const text = document.getElementById("queueStatusText");
+    const logs = document.getElementById("queueLogs");
+    const memberStatusIcon = document.getElementById("memberStatusIcon");
 
     if (!icon || !text || !logs)
     {
         return;
     }
 
-    const hasPending =
-        queueHandler.queue.length > 0;
-
     if (queueSending)
     {
-        icon.innerHTML =
-            `<span class="queueSpinner"></span>`;
-
-        text.textContent =
-            "Verzenden...";
-    }
-    else if (hasPending)
-    {
-        icon.innerHTML =
-            `<span class="queueSpinner"></span>`;
-
-        text.textContent =
-            "Pending...";
+        icon.innerHTML = `<span class="queueSpinner"></span>`;
+        text.textContent = "Verzenden...";
     }
     else if (queueFetching)
     {
-        icon.innerHTML =
-            `<span class="queueSpinner"></span>`;
-
-        text.textContent =
-            "Ophalen...";
-    }
-    else if (queueFetchFailed)
-    {
-        icon.textContent = "!";
-        text.textContent =
-            "Ophalen mislukt";
+        icon.innerHTML = `<span class="queueSpinner"></span>`;
+        text.textContent = "Ophalen...";
     }
     else
     {
         icon.textContent = "✓";
-        text.textContent =
-            "Up-to-date";
+        text.textContent = "Up-to-date";
     }
 
-    logs.innerHTML =
-        queueLogs
-            .map(line =>
-                `<div class="queueLogLine">${line}</div>`
-            )
-            .join("");
+    if (memberStatusIcon)
+    {
+        if (queueSending || queueFetching)
+        {
+            memberStatusIcon.innerHTML = `<span class="queueSpinner"></span>`;
+        }
+        else
+        {
+            memberStatusIcon.textContent = "♔";
+        }
+    }
+
+    logs.innerHTML = queueLogs
+        .map(line => `<div class="queueLogLine">${line}</div>`)
+        .join("");
 }
 
 function toggleQueueInfo()
