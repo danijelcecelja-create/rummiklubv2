@@ -27,7 +27,16 @@
        
             <!--
          -->
-
+        
+        <div id="queueInfo" class="queueInfo">
+                                            <div class="queueHeader" onclick="toggleQueueInfo()">
+                                                <span id="queueStatusIcon" class="queueStatusIcon">✓</span>
+                                                <span id="queueStatusText" class="queueStatusText">Up-to-date</span>
+                                                <span id="queueExpandIcon"></span>
+                                            </div>
+                            
+                                            <div id="queueLogs" class="queueLogs"></div>
+            </div> <br/>
             <table id="mainTable">
                 <thead>
                     <tr>
@@ -38,15 +47,7 @@
                                 style="color: inherit; text-decoration: none"
                             >
                                 <span class="rankingIndex">&nbsp♔&nbsp</span>Leden
-                                 <div id="queueInfo" class="queueInfo">
-                                    <div class="queueHeader" onclick="toggleQueueInfo()">
-                                        <span id="queueStatusIcon" class="queueStatusIcon">✓</span>
-                                        <span id="queueStatusText" class="queueStatusText">Up-to-date</span>
-                                        <span id="queueExpandIcon"></span>
-                                    </div>
-                    
-                                    <div id="queueLogs" class="queueLogs"></div>
-                                </div>
+                                 
                             </a>
                         </th>
                     </tr>
