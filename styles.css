@@ -419,7 +419,7 @@ input {
 }
 
 .queueHeader {
-    height: 32px;
+    height: 16px;
     display: flex;
     align-items: center;
     gap: 8px;
