@@ -1,141 +1,153 @@
-<!DOCTYPE html> 
+<!doctype html>
 <html lang="nl">
-   <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Rummiklub</title>
-      <link rel="icon" type="image/jpeg" href="https://raw.githubusercontent.com/danijelcecelja-create/rummiklubv2/main/joker.jpg">
-      <link rel="stylesheet" href="styles.css">
-      
-   </head>
-   <body>
-      <div id="loader" class="loader">
-         <div class="spinner"></div>
-      </div>
-      <div class="container">
-      <div id="queueInfo" class="queueInfo">
-    <div class="queueHeader" onclick="toggleQueueInfo()">
-        <span id="queueStatusIcon" class="queueStatusIcon">✓</span>
-        <span id="queueStatusText" class="queueStatusText">Up-to-date</span>
-        <span id="queueExpandIcon"></span>
-    </div>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Rummiklub</title>
+        <link
+            rel="icon"
+            type="image/jpeg"
+            href="https://raw.githubusercontent.com/danijelcecelja-create/rummiklubv2/main/joker.jpg"
+        />
+        <link rel="stylesheet" href="styles.css" />
+    </head>
+    <body>
+        <div id="loader" class="loader">
+            <div class="spinner"></div>
+        </div>
+       
+            <div id="queueInfo" class="queueInfo">
+                <div class="queueHeader" onclick="toggleQueueInfo()">
+                    <span id="queueStatusIcon" class="queueStatusIcon">✓</span>
+                    <span id="queueStatusText" class="queueStatusText">Up-to-date</span>
+                    <span id="queueExpandIcon"></span>
+                </div>
 
-    <div id="queueLogs" class="queueLogs"></div>
-      </div>
-      </div>
-      <div class="header">
-         <a href="https://github.com/danijelcecelja-create/rummiklubv2" target="_blank">
-         <img src="https://raw.githubusercontent.com/danijelcecelja-create/rummiklubv2/main/rummiklub.jpeg" />
-         </a>
-      </div>
-      
-      <div class="container">
-      <!--
+                <div id="queueLogs" class="queueLogs"></div>
+            </div>
+       
+        <div class="header">
+            <a href="https://github.com/danijelcecelja-create/rummiklubv2" target="_blank">
+                <img src="https://raw.githubusercontent.com/danijelcecelja-create/rummiklubv2/main/rummiklub.jpeg" />
+            </a>
+        </div>
+
+        <div class="container">
+            <!--
          -->
-      
-         <table id="mainTable">
-         <thead>
-            <tr>
-                  <th class="thspan" colspan="6">
-                     <a href="https://docs.google.com/spreadsheets/u/0/?q=%22Rummiklub%25%22"
-                        target="_blank"
-                        style="color:inherit; text-decoration:none;">
-                     <span class="rankingIndex">&nbsp♔&nbsp</span>Leden
-                     </a>
-                  </th>
-               </tr>
-            <tr id="membersHeaderRow"></tr>
-         </thead>
-         <tbody id="rankingMain"></tbody>
-      </table>
-      
-      <table id="secondaryTable">
-         <thead>
-            <tr>
-                  <th class="thspan" colspan="6">
-                     <a href="https://docs.google.com/spreadsheets/u/0/?q=%22Rummiklub%25%22"
-                        target="_blank"
-                        style="color:inherit; text-decoration:none;">
-                     <span class="rankingIndex">&nbsp♘&nbsp</span>Gasten
-                     </a>
-                  </th>
-               </tr>
-            <tr id="guestsHeaderRow"></tr>
-         </thead>
-         <tbody id="rankingSecondary"></tbody>
-      </table>
-         <div class="bottomAdd">
-            <button class="addPlayerBtn" onclick="showAddPlayer()">
-            
-            <img src="https://raw.githubusercontent.com/danijelcecelja-create/rummiklubv2/main/joker.jpg" alt="Speler toevoegen">
-            </button>
-         </div>
-         <br/><br/><br/><br/><br/><br/><br/><br/><br/>
-         <table class="rulesTable">
-            <tr>
-               <td>
-                  <div class="rulesBox">
-                     <h2>Welkom bij Rummiklub!</h2>
-                     <p>
-                        Het doel is om de speler te zijn met de laagste score.
-                     </p>
-                     <p><strong>Score = Punten ÷ Beurten</strong></p>
-                     <br/><br/>
-                     <h3>Spelregels</h3>
-                     <ul>
-                        <li>Elke speler start met 14 tegels</li>
-                        <li>Maak sets 3-<span style="color:blue">3</span>-<span style="color:red">3</span> of reeksen 1-2-3 van minstens 3 tegels</li> 
-                        <li>Eerste zet moet minstens 30 punten zijn</li>
-                        <li>Pas in de beurt na de eerste zet mogen tegels worden herschikt</li>
-                        <li>Klop 2 keer op tafel met de hand om je beurt af te sluiten</li>
-                        <li>Eerste speler zonder tegels wint</li>
-                        <li>Tel je tegels op aan het einde en geef ze in</li>
-                        <li><b>Joker = 30 punten</b></li>
-                        <li>Consistentie is belangrijker dan geluk</li>
-                        <li>Na <span id="memberTurnsText">2</span> beurten word je lid</li>
-                        <li>Een beetje zagen mag, maar niet teveel</li>
-                        <br/><br/>
-                        <a href="https://rummikub.com/wp-content/uploads/2019/12/2600-English-1.pdf"
-                           target="_blank"
-                           rel="noopener noreferrer">
-                        alle spelregels
-                        </a>
-                     </ul>
-                  </div>
-               </td>
-            </tr>
-         </table>
-      </div>
-      <dialog id="playerInfoDialog">
-         <h3 id="playerInfoName"></h3>
-         <p id="playerInfoDetails"></p>
-         <div class="modalButtons">
-            <button onclick="document.getElementById('playerInfoDialog').close()">Sluiten</button>
-         </div>
-      </dialog>
-      <dialog id="scoreDialog">
-         <h3>Punten toevoegen</h3>
-         <input type="text" id="scoreInput" placeholder="Punten">
-         <div class="modalButtons">
-            <button onclick="closeDialogs()">Annuleren</button>
-            <button class="saveBtn" onclick="saveScore()">Opslaan</button>
-         </div>
-      </dialog>
-      <dialog id="playerDialog">
-         <h3>Nieuwe speler</h3>
-         <input type="text" id="playerNameInput" placeholder="Naam">
-         <input type="text" id="playerScoreInput" placeholder="Punten">
-         <div class="modalButtons">
-            <button onclick="closeDialogs()">Annuleren</button>
-            <button class="saveBtn" onclick="savePlayer()">Opslaan</button>
-         </div>
-      </dialog>
-      <script src="rummiklub.js"></script>
-      <div id="version">
+
+            <table id="mainTable">
+                <thead>
+                    <tr>
+                        <th class="thspan" colspan="6">
+                            <a
+                                href="https://docs.google.com/spreadsheets/u/0/?q=%22Rummiklub%25%22"
+                                target="_blank"
+                                style="color: inherit; text-decoration: none"
+                            >
+                                <span class="rankingIndex">&nbsp♔&nbsp</span>Leden
+                            </a>
+                        </th>
+                    </tr>
+                    <tr id="membersHeaderRow"></tr>
+                </thead>
+                <tbody id="rankingMain"></tbody>
+            </table>
+
+            <table id="secondaryTable">
+                <thead>
+                    <tr>
+                        <th class="thspan" colspan="6">
+                            <a
+                                href="https://docs.google.com/spreadsheets/u/0/?q=%22Rummiklub%25%22"
+                                target="_blank"
+                                style="color: inherit; text-decoration: none"
+                            >
+                                <span class="rankingIndex">&nbsp♘&nbsp</span>Gasten
+                            </a>
+                        </th>
+                    </tr>
+                    <tr id="guestsHeaderRow"></tr>
+                </thead>
+                <tbody id="rankingSecondary"></tbody>
+            </table>
+            <div class="bottomAdd">
+                <button class="addPlayerBtn" onclick="showAddPlayer()">
+                    <img
+                        src="https://raw.githubusercontent.com/danijelcecelja-create/rummiklubv2/main/joker.jpg"
+                        alt="Speler toevoegen"
+                    />
+                </button>
+            </div>
+            <br /><br /><br /><br /><br /><br /><br /><br /><br />
+            <table class="rulesTable">
+                <tr>
+                    <td>
+                        <div class="rulesBox">
+                            <h2>Welkom bij Rummiklub!</h2>
+                            <p>Het doel is om de speler te zijn met de laagste score.</p>
+                            <p><strong>Score = Punten ÷ Beurten</strong></p>
+                            <br /><br />
+                            <h3>Spelregels</h3>
+                            <ul>
+                                <li>Elke speler start met 14 tegels</li>
+                                <li>
+                                    Maak sets 3-<span style="color: blue">3</span>-<span style="color: red">3</span> of
+                                    reeksen 1-2-3 van minstens 3 tegels
+                                </li>
+                                <li>Eerste zet moet minstens 30 punten zijn</li>
+                                <li>Pas in de beurt na de eerste zet mogen tegels worden herschikt</li>
+                                <li>Klop 2 keer op tafel met de hand om je beurt af te sluiten</li>
+                                <li>Eerste speler zonder tegels wint</li>
+                                <li>Tel je tegels op aan het einde en geef ze in</li>
+                                <li><b>Joker = 30 punten</b></li>
+                                <li>Consistentie is belangrijker dan geluk</li>
+                                <li>Na <span id="memberTurnsText">2</span> beurten word je lid</li>
+                                <li>Een beetje zagen mag, maar niet teveel</li>
+                                <br /><br />
+                                <a
+                                    href="https://rummikub.com/wp-content/uploads/2019/12/2600-English-1.pdf"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                >
+                                    alle spelregels
+                                </a>
+                            </ul>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <dialog id="playerInfoDialog">
+            <h3 id="playerInfoName"></h3>
+            <p id="playerInfoDetails"></p>
+            <div class="modalButtons">
+                <button onclick="document.getElementById('playerInfoDialog').close()">Sluiten</button>
+            </div>
+        </dialog>
+        <dialog id="scoreDialog">
+            <h3>Punten toevoegen</h3>
+            <input type="text" id="scoreInput" placeholder="Punten" />
+            <div class="modalButtons">
+                <button onclick="closeDialogs()">Annuleren</button>
+                <button class="saveBtn" onclick="saveScore()">Opslaan</button>
+            </div>
+        </dialog>
+        <dialog id="playerDialog">
+            <h3>Nieuwe speler</h3>
+            <input type="text" id="playerNameInput" placeholder="Naam" />
+            <input type="text" id="playerScoreInput" placeholder="Punten" />
+            <div class="modalButtons">
+                <button onclick="closeDialogs()">Annuleren</button>
+                <button class="saveBtn" onclick="savePlayer()">Opslaan</button>
+            </div>
+        </dialog>
+        <script src="rummiklub.js"></script>
+        <div id="version">
             Last modified:
             <script>
                 document.write(document.lastModified);
             </script>
-      </div>
-   </body>
+        </div>
+    </body>
 </html>
