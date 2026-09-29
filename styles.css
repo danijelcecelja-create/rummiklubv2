@@ -478,6 +478,18 @@ input {
     box-sizing: border-box;
 }
 
+#memberStatusIcon .queueSpinner {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    box-sizing: border-box;
+    border: 2px solid #ddd;
+    border-top: 2px solid #111;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    vertical-align: middle;
+}
+
 .queueCheck {
     font-size: 14px;
     line-height: 1;
