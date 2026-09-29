@@ -6,7 +6,10 @@ window.savePlayer = savePlayer;
 window.showAddPlayer = showAddPlayer;
 window.closeDialogs = closeDialogs;
 
-const apiUrl = "https://script.google.com/macros/s/AKfycbwi_PdOKLs0JzIPspPLX7230lgJv9AvmEQCHhSELMl-aUm1vNNwS2B3hEAgjCYwjRcpNA/exec";
+const apiUrl = "https://script.google.com/macros/s/AKfycbyW3a0PLGXdRIbZhi1tBydf997MBmmPHoQXq1Sd5u_oEyHbAGezwKYphacRkQSBX3JM/exec";
+
+
+
 
 let members = [];
 let guests = [];
