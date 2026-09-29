@@ -337,13 +337,7 @@ function renderQueueInfo()
 
 function toggleQueueInfo()
 {
-    const info = document.getElementById("queueInfo");
-    const icon = document.getElementById("queueExpandIcon");
-
-    info.classList.toggle("expanded");
-
-    icon.textContent =
-        info.classList.contains("expanded") ? "⌃" : "⌄";
+    document.getElementById("queueInfo").classList.toggle("expanded");
 }
 
 function showPlayerInfo(naam, isMember)
