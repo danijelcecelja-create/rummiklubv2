@@ -6,7 +6,7 @@ window.savePlayer = savePlayer;
 window.showAddPlayer = showAddPlayer;
 window.closeDialogs = closeDialogs;
 
-const apiUrl = "https://script.google.com/macros/s/AKfycbyW3a0PLGXdRIbZhi1tBydf997MBmmPHoXQq1Sd5u_oEyHbAGezwKYphacRkQSBX3JM/exec";
+const apiUrl = "https://script.google.com/macros/s/AKfycbyW3a0PLGXdRIbZhi1tBydf997MBmmPHoQXq1Sd5u_oEyHbAGezwKYphacRkQSBX3JM/exec";
 
 const rankingCacheKey = "rummiklub_ranking_cache";
 const queueStorageKey = "rummiklub_submit_queue";
