@@ -1352,7 +1352,21 @@ loadPlayers();
 setInterval(
     () =>
     {
-        loadPlayers(true);
+        if (!document.hidden)
+        {
+            loadPlayers(true);
+        }
     },
-    30000
+    15000
+);
+
+document.addEventListener(
+    "visibilitychange",
+    () =>
+    {
+        if (!document.hidden)
+        {
+            loadPlayers(true);
+        }
+    }
 );
