@@ -237,7 +237,7 @@ class QueueHandler
 
     getRetryDelay()
     {
-            return 3000;
+        return 3000;
     }
 
     start()
@@ -824,12 +824,15 @@ async function readRanking()
         "Ophalen ranking"
     );
 
+    const url =
+        `${apiUrl}?action=readRanking`;
+
     try
     {
+        addQueueLog(url);
+
         const response =
-            await fetch(
-                `${apiUrl}?action=readRanking`
-            );
+            await fetch(url);
 
         if (!response.ok)
         {
@@ -858,6 +861,12 @@ async function readRanking()
 
         addQueueLog(
             `Ophalen mislukt: ${error.message}`
+        );
+
+        console.error(
+            "Ranking fetch failed",
+            url,
+            error
         );
 
         scheduleFetchRetry();
