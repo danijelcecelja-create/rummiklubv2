@@ -94,6 +94,8 @@ class QueueHandler
             `Toegevoegd aan wachtrij: ${item.payload.action}`
         );
 
+        renderQueueInfo();
+
         this.process();
 
         return item;
@@ -105,6 +107,8 @@ class QueueHandler
             this.queue.filter(item => item.id !== id);
 
         this.save();
+
+        renderQueueInfo();
     }
 
     async process()
@@ -131,8 +135,6 @@ class QueueHandler
                 item.attempts++;
                 this.save();
 
-                queueFetchFailed = false;
-
                 addQueueLog(
                     `Verzenden: ${item.payload.action} poging ${item.attempts}`
                 );
@@ -141,9 +143,8 @@ class QueueHandler
                 {
                     setQueueSending(true);
 
-                    const response = await apiPost(
-                        item.payload
-                    );
+                    const response =
+                        await apiPost(item.payload);
 
                     if (!response.ok)
                     {
@@ -167,8 +168,6 @@ class QueueHandler
                     );
 
                     this.remove(item.id);
-
-                    queueFetchFailed = false;
 
                     await loadPlayers(true);
                 }
@@ -259,6 +258,8 @@ class QueueHandler
             addQueueLog(
                 `${this.queue.length} opgeslagen verzoek(en) gevonden`
             );
+
+            renderQueueInfo();
 
             this.process();
         }
@@ -376,49 +377,92 @@ function setQueueFetching(value)
     renderQueueInfo();
 }
 
+function isQueuePending()
+{
+    return queueHandler.queue.length > 0 ||
+        queueFetchFailed;
+}
+
 function renderQueueInfo()
 {
-    const icon = document.getElementById("queueStatusIcon");
-    const text = document.getElementById("queueStatusText");
-    const logs = document.getElementById("queueLogs");
-    const memberStatusIcon = document.getElementById("memberStatusIcon");
+    const icon =
+        document.getElementById("queueStatusIcon");
+
+    const text =
+        document.getElementById("queueStatusText");
+
+    const logs =
+        document.getElementById("queueLogs");
+
+    const memberStatusIcon =
+        document.getElementById("memberStatusIcon");
 
     if (!icon || !text || !logs)
     {
         return;
     }
 
+    const pending =
+        isQueuePending();
+
     if (queueSending)
     {
-        icon.innerHTML = `<span class="queueSpinner"></span>`;
-        text.textContent = "Verzenden...";
+        icon.innerHTML =
+            `<span class="queueSpinner"></span>`;
+
+        text.textContent =
+            "Verzenden...";
     }
     else if (queueFetching)
     {
-        icon.innerHTML = `<span class="queueSpinner"></span>`;
-        text.textContent = "Ophalen...";
+        icon.innerHTML =
+            `<span class="queueSpinner"></span>`;
+
+        text.textContent =
+            "Ophalen...";
+    }
+    else if (pending)
+    {
+        icon.innerHTML =
+            `<span class="queueSpinner"></span>`;
+
+        text.textContent =
+            "Pending";
     }
     else
     {
-        icon.textContent = "✓";
-        text.textContent = "Up-to-date";
+        icon.textContent =
+            "✓";
+
+        text.textContent =
+            "Up-to-date";
     }
 
     if (memberStatusIcon)
     {
-        if (queueSending || queueFetching)
+        if (
+            queueSending ||
+            queueFetching ||
+            pending
+        )
         {
-            memberStatusIcon.innerHTML = `<span class="queueSpinner"></span>`;
+            memberStatusIcon.innerHTML =
+                `<span class="queueSpinner"></span>`;
         }
         else
         {
-            memberStatusIcon.textContent = "♔";
+            memberStatusIcon.textContent =
+                "♔";
         }
     }
 
-    logs.innerHTML = queueLogs
-        .map(line => `<div class="queueLogLine">${line}</div>`)
-        .join("");
+    logs.innerHTML =
+        queueLogs
+            .map(
+                line =>
+                    `<div class="queueLogLine">${line}</div>`
+            )
+            .join("");
 }
 
 function toggleQueueInfo()
@@ -764,6 +808,8 @@ async function readRanking()
             "Ranking opgehaald"
         );
 
+        queueFetchFailed = false;
+
         return data;
     }
     catch (error)
@@ -773,6 +819,8 @@ async function readRanking()
         addQueueLog(
             `Ophalen mislukt: ${error.message}`
         );
+
+        renderQueueInfo();
 
         throw error;
     }
@@ -899,6 +947,10 @@ async function loadPlayers(background = false)
             "Fetch ranking failed",
             error
         );
+
+        queueFetchFailed = true;
+
+        renderQueueInfo();
     }
     finally
     {
