@@ -6,7 +6,7 @@ window.savePlayer = savePlayer;
 window.showAddPlayer = showAddPlayer;
 window.closeDialogs = closeDialogs;
 
-const apiUrl = "https://script.google.com/macros/s/AKfycbyW3a0PLGXdRIbZhi1tBydf997MBmmPHoXQq1Sd5u_oEyHbAGezwKYphacRkQSBX3JM/exec";
+const apiUrl = "https://script.google.com/macros/s/AKfycbyW3a0PLGXdRIbZhi1tBydf997MBmmPHoQXq1Sd5u_oEyHbAGezwKYphacRkQSBX3JM/exec";
 
 const rankingCacheKey = "rummiklub_ranking_cache";
 const queueStorageKey = "rummiklub_submit_queue";
@@ -219,19 +219,17 @@ class QueueHandler
             return;
         }
 
-        const delay =
-            this.getRetryDelay();
+        const delay = this.getRetryDelay();
 
         addQueueLog(
             `Retry over ${Math.round(delay / 1000)}s`
         );
 
-        this.retryTimer =
-            setTimeout(() =>
-            {
-                this.retryTimer = null;
-                this.process();
-            }, delay);
+        this.retryTimer = setTimeout(() =>
+        {
+            this.retryTimer = null;
+            this.process();
+        }, delay);
     }
 
     getRetryDelay()
@@ -381,7 +379,8 @@ function setQueueFetching(value)
 
 function isQueuePending()
 {
-    return queueHandler.queue.length > 0;
+    return queueHandler.queue.length > 0 ||
+        queueFetchFailed;
 }
 
 function renderQueueInfo()
@@ -782,6 +781,7 @@ async function apiPost(payload)
 async function readRanking()
 {
     setQueueFetching(true);
+    queueFetchFailed = false;
 
     addQueueLog(
         "Ophalen ranking"
@@ -804,11 +804,11 @@ async function readRanking()
         const data =
             await response.json();
 
-        queueFetchFailed = false;
-
         addQueueLog(
             "Ranking opgehaald"
         );
+
+        queueFetchFailed = false;
 
         return data;
     }
@@ -819,6 +819,8 @@ async function readRanking()
         addQueueLog(
             `Ophalen mislukt: ${error.message}`
         );
+
+        renderQueueInfo();
 
         throw error;
     }
@@ -1344,3 +1346,4 @@ function parsePunten(input)
 
 queueHandler.start();
 loadPlayers();
+
