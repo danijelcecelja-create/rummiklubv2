@@ -456,6 +456,11 @@ function renderQueueInfo()
             memberStatusIcon.innerHTML =
                 `<span class="queueSpinner"></span>`;
         }
+        else if (pending)
+        {
+            memberStatusIcon.textContent =
+                "♜";
+        }
         else
         {
             memberStatusIcon.textContent =
