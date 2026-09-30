@@ -484,7 +484,7 @@ input {
     height: 14px;
     box-sizing: border-box;
     border: 2px solid #ddd;
-    border-top: 2px solid #ed1111;
+    border-top: 2px solid #aba7a7;
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
     vertical-align: middle;
