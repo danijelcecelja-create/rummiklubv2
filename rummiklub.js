@@ -17,7 +17,6 @@ let membersHeaders = [];
 let guestsHeaders = [];
 let selectedPlayer = null;
 let memberTurns = "";
-let memberIcon = "";
 
 let holdTimer = null;
 let holdPlayer = null;
@@ -436,8 +435,6 @@ function renderQueueInfo()
 
         text.textContent =
             "Up-to-date";
-
-        memberIcon = "♔";
     }
     else
     {
@@ -446,7 +443,6 @@ function renderQueueInfo()
 
         text.textContent =
             "Stale";
-        memberIcon = "🕱";
     }
 
     if (memberStatusIcon)
@@ -460,11 +456,12 @@ function renderQueueInfo()
             memberStatusIcon.innerHTML =
                 `<span class="queueSpinner"></span>`;
         }
-        
         else
         {
             memberStatusIcon.textContent =
-                memberIcon;
+                rankingSynced
+                    ? "♔"
+                    : "🕱";
         }
     }
 
