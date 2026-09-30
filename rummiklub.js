@@ -26,9 +26,6 @@ let queueSending = false;
 let queueFetching = false;
 let queueFetchFailed = false;
 
-let fetchRetryTimer = null;
-let fetchRetryAttempts = 0;
-
 class QueueHandler
 {
     constructor()
@@ -222,22 +219,38 @@ class QueueHandler
             return;
         }
 
-        const delay = this.getRetryDelay();
+        const delay =
+            this.getRetryDelay();
 
         addQueueLog(
             `Retry over ${Math.round(delay / 1000)}s`
         );
 
-        this.retryTimer = setTimeout(() =>
-        {
-            this.retryTimer = null;
-            this.process();
-        }, delay);
+        this.retryTimer =
+            setTimeout(() =>
+            {
+                this.retryTimer = null;
+                this.process();
+            }, delay);
     }
 
     getRetryDelay()
     {
-        return 3000;
+        if (!this.queue.length)
+        {
+            return 5000;
+        }
+
+        const attempts =
+            Number(this.queue[0].attempts) || 0;
+
+        if (attempts <= 1) return 5000;
+        if (attempts <= 2) return 15000;
+        if (attempts <= 3) return 30000;
+        if (attempts <= 4) return 60000;
+        if (attempts <= 5) return 120000;
+
+        return 300000;
     }
 
     start()
@@ -368,57 +381,7 @@ function setQueueFetching(value)
 
 function isQueuePending()
 {
-    return queueHandler.queue.length > 0 ||
-        queueFetchFailed;
-}
-
-function getFetchRetryDelay()
-{
-    if (fetchRetryAttempts <= 1) return 5000;
-    if (fetchRetryAttempts <= 2) return 15000;
-    if (fetchRetryAttempts <= 3) return 30000;
-    if (fetchRetryAttempts <= 4) return 60000;
-    if (fetchRetryAttempts <= 5) return 120000;
-
-    return 300000;
-}
-
-function scheduleFetchRetry()
-{
-    if (fetchRetryTimer)
-    {
-        return;
-    }
-
-    fetchRetryAttempts++;
-
-    const delay =
-        getFetchRetryDelay();
-
-    addQueueLog(
-        `Ranking retry over ${Math.round(delay / 1000)}s`
-    );
-
-    fetchRetryTimer =
-        setTimeout(() =>
-        {
-            fetchRetryTimer = null;
-
-            loadPlayers(true);
-        }, delay);
-
-    renderQueueInfo();
-}
-
-function clearFetchRetry()
-{
-    if (fetchRetryTimer)
-    {
-        clearTimeout(fetchRetryTimer);
-        fetchRetryTimer = null;
-    }
-
-    fetchRetryAttempts = 0;
+    return queueHandler.queue.length > 0;
 }
 
 function renderQueueInfo()
@@ -824,15 +787,12 @@ async function readRanking()
         "Ophalen ranking"
     );
 
-    const url =
-        `${apiUrl}?action=readRanking`;
-
     try
     {
-        addQueueLog(url);
-
         const response =
-            await fetch(url);
+            await fetch(
+                `${apiUrl}?action=readRanking`
+            );
 
         if (!response.ok)
         {
@@ -845,13 +805,10 @@ async function readRanking()
             await response.json();
 
         queueFetchFailed = false;
-        clearFetchRetry();
 
         addQueueLog(
             "Ranking opgehaald"
         );
-
-        renderQueueInfo();
 
         return data;
     }
@@ -862,14 +819,6 @@ async function readRanking()
         addQueueLog(
             `Ophalen mislukt: ${error.message}`
         );
-
-        console.error(
-            "Ranking fetch failed",
-            url,
-            error
-        );
-
-        scheduleFetchRetry();
 
         throw error;
     }
@@ -987,8 +936,6 @@ async function loadPlayers(background = false)
         applyRankingData(data);
 
         queueFetchFailed = false;
-
-        clearFetchRetry();
 
         renderQueueInfo();
     }
