@@ -1357,7 +1357,7 @@ setInterval(
             loadPlayers(true);
         }
     },
-    15000
+    30000
 );
 
 document.addEventListener(
