@@ -461,7 +461,7 @@ function renderQueueInfo()
             memberStatusIcon.textContent =
                 rankingSynced
                     ? "♔"
-                    : "🕱";
+                    : "♖";
         }
     }
 
