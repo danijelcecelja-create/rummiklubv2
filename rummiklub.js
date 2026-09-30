@@ -6,7 +6,7 @@ window.savePlayer = savePlayer;
 window.showAddPlayer = showAddPlayer;
 window.closeDialogs = closeDialogs;
 
-const apiUrl = "https://script.google.com/macros/s/AKfycbyW3a0PLGXdRIbZhi1tBydf997MBmmPHoQXq1Sd5u_oEyHbAGezwKYphacRkQSBX3JM/exec";
+const apiUrl = "https://script.google.com/macros/s/AKfycbyW3a0PLGXdRIbZhi1tBydf997MBmmPHoXQq1Sd5u_oEyHbAGezwKYphacRkQSBX3JM/exec";
 
 const rankingCacheKey = "rummiklub_ranking_cache";
 const queueStorageKey = "rummiklub_submit_queue";
@@ -25,6 +25,9 @@ let queueLogs = [];
 let queueSending = false;
 let queueFetching = false;
 let queueFetchFailed = false;
+
+let fetchRetryTimer = null;
+let fetchRetryAttempts = 0;
 
 class QueueHandler
 {
@@ -381,6 +384,55 @@ function isQueuePending()
 {
     return queueHandler.queue.length > 0 ||
         queueFetchFailed;
+}
+
+function getFetchRetryDelay()
+{
+    if (fetchRetryAttempts <= 1) return 5000;
+    if (fetchRetryAttempts <= 2) return 15000;
+    if (fetchRetryAttempts <= 3) return 30000;
+    if (fetchRetryAttempts <= 4) return 60000;
+    if (fetchRetryAttempts <= 5) return 120000;
+
+    return 300000;
+}
+
+function scheduleFetchRetry()
+{
+    if (fetchRetryTimer)
+    {
+        return;
+    }
+
+    fetchRetryAttempts++;
+
+    const delay =
+        getFetchRetryDelay();
+
+    addQueueLog(
+        `Ranking retry over ${Math.round(delay / 1000)}s`
+    );
+
+    fetchRetryTimer =
+        setTimeout(() =>
+        {
+            fetchRetryTimer = null;
+
+            loadPlayers(true);
+        }, delay);
+
+    renderQueueInfo();
+}
+
+function clearFetchRetry()
+{
+    if (fetchRetryTimer)
+    {
+        clearTimeout(fetchRetryTimer);
+        fetchRetryTimer = null;
+    }
+
+    fetchRetryAttempts = 0;
 }
 
 function renderQueueInfo()
@@ -781,7 +833,6 @@ async function apiPost(payload)
 async function readRanking()
 {
     setQueueFetching(true);
-    queueFetchFailed = false;
 
     addQueueLog(
         "Ophalen ranking"
@@ -804,11 +855,14 @@ async function readRanking()
         const data =
             await response.json();
 
+        queueFetchFailed = false;
+        clearFetchRetry();
+
         addQueueLog(
             "Ranking opgehaald"
         );
 
-        queueFetchFailed = false;
+        renderQueueInfo();
 
         return data;
     }
@@ -820,7 +874,7 @@ async function readRanking()
             `Ophalen mislukt: ${error.message}`
         );
 
-        renderQueueInfo();
+        scheduleFetchRetry();
 
         throw error;
     }
@@ -938,6 +992,8 @@ async function loadPlayers(background = false)
         applyRankingData(data);
 
         queueFetchFailed = false;
+
+        clearFetchRetry();
 
         renderQueueInfo();
     }
