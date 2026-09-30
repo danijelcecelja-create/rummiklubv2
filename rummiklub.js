@@ -237,21 +237,7 @@ class QueueHandler
 
     getRetryDelay()
     {
-        if (!this.queue.length)
-        {
-            return 5000;
-        }
-
-        const attempts =
-            Number(this.queue[0].attempts) || 0;
-
-        if (attempts <= 1) return 5000;
-        if (attempts <= 2) return 15000;
-        if (attempts <= 3) return 30000;
-        if (attempts <= 4) return 60000;
-        if (attempts <= 5) return 120000;
-
-        return 300000;
+            return 3000;
     }
 
     start()
