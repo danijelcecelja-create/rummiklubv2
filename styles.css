@@ -451,7 +451,7 @@ input {
     display: none;
     padding: 4px 0 8px;
     max-height: 180px;
-    overflow-y: auto;
+    overflow: hidden;
 }
 
 #queueInfo.expanded #queueLogs {
