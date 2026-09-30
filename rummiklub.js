@@ -459,7 +459,7 @@ function renderQueueInfo()
         else if (pending)
         {
             memberStatusIcon.textContent =
-                "♜";
+                "🕱";
         }
         else
         {
