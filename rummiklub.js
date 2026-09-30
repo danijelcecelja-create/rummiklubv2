@@ -6,7 +6,7 @@ window.savePlayer = savePlayer;
 window.showAddPlayer = showAddPlayer;
 window.closeDialogs = closeDialogs;
 
-const apiUrl = "https://script.google.com/macros/s/AKfycbyW3a0PLGXdRIbZhi1tBydf997MBmmPHoQXq1Sd5u_oEyHbAGezwKYphacRkQSBX3JM/exec";
+const apiUrl = "https://script.google.com/macros/s/AKfycbyW3a0PLGXdRIbZhi1tBydf997MBmmPHoXQq1Sd5u_oEyHbAGezwKYphacRkQSBX3JM/exec";
 
 const rankingCacheKey = "rummiklub_ranking_cache";
 const queueStorageKey = "rummiklub_submit_queue";
@@ -24,7 +24,7 @@ let holdPlayer = null;
 let queueLogs = [];
 let queueSending = false;
 let queueFetching = false;
-let queueFetchFailed = false;
+let rankingSynced = false;
 
 class QueueHandler
 {
@@ -379,8 +379,7 @@ function setQueueFetching(value)
 
 function isQueuePending()
 {
-    return queueHandler.queue.length > 0 ||
-        queueFetchFailed;
+    return queueHandler.queue.length > 0;
 }
 
 function renderQueueInfo()
@@ -429,13 +428,21 @@ function renderQueueInfo()
         text.textContent =
             "Pending";
     }
-    else
+    else if (rankingSynced)
     {
         icon.textContent =
             "✓";
 
         text.textContent =
             "Up-to-date";
+    }
+    else
+    {
+        icon.textContent =
+            "⚠";
+
+        text.textContent =
+            "Stale";
     }
 
     if (memberStatusIcon)
@@ -781,7 +788,6 @@ async function apiPost(payload)
 async function readRanking()
 {
     setQueueFetching(true);
-    queueFetchFailed = false;
 
     addQueueLog(
         "Ophalen ranking"
@@ -804,17 +810,17 @@ async function readRanking()
         const data =
             await response.json();
 
+        rankingSynced = true;
+
         addQueueLog(
             "Ranking opgehaald"
         );
-
-        queueFetchFailed = false;
 
         return data;
     }
     catch (error)
     {
-        queueFetchFailed = true;
+        rankingSynced = false;
 
         addQueueLog(
             `Ophalen mislukt: ${error.message}`
@@ -937,8 +943,6 @@ async function loadPlayers(background = false)
 
         applyRankingData(data);
 
-        queueFetchFailed = false;
-
         renderQueueInfo();
     }
     catch (error)
@@ -947,8 +951,6 @@ async function loadPlayers(background = false)
             "Fetch ranking failed",
             error
         );
-
-        queueFetchFailed = true;
 
         renderQueueInfo();
     }
@@ -1347,3 +1349,10 @@ function parsePunten(input)
 queueHandler.start();
 loadPlayers();
 
+setInterval(
+    () =>
+    {
+        loadPlayers(true);
+    },
+    30000
+);
