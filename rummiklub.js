@@ -8,6 +8,8 @@ window.closeDialogs = closeDialogs;
 
 const apiUrl = "https://script.google.com/macros/s/AKfycbwi3zCFKVzhxIvjISN27XYwRJqIgaKI6URuDKv36-_rNbpCj_r9gP1bXKXVmeIdyO9CRQ/exec";
 
+console.log(apiUrl);
+
 const rankingCacheKey = "rummiklub_ranking_cache";
 const queueStorageKey = "rummiklub_submit_queue";
 
