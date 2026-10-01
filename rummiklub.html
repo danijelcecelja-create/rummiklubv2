@@ -127,7 +127,7 @@
         </dialog>
         <dialog id="scoreDialog">
             <h3>Punten toevoegen</h3>
-            <input type="text" id="scoreInput" placeholder="Punten" />
+            <input type="text" id="scoreInput" placeholder="Punten" autocomplete="off"/>
             <div class="modalButtons">
                 <button onclick="closeDialogs()">Annuleren</button>
                 <button class="saveBtn" onclick="saveScore()">Opslaan</button>
@@ -135,8 +135,8 @@
         </dialog>
         <dialog id="playerDialog">
             <h3>Nieuwe speler</h3>
-            <input type="text" id="playerNameInput" placeholder="Naam" />
-            <input type="text" id="playerScoreInput" placeholder="Punten" />
+            <input type="text" id="playerNameInput" placeholder="Naam" autocomplete="off"/>
+            <input type="text" id="playerScoreInput" placeholder="Punten" autocomplete="off"/>
             <div class="modalButtons">
                 <button onclick="closeDialogs()">Annuleren</button>
                 <button class="saveBtn" onclick="savePlayer()">Opslaan</button>
