@@ -6,7 +6,7 @@ window.savePlayer = savePlayer;
 window.showAddPlayer = showAddPlayer;
 window.closeDialogs = closeDialogs;
 
-const apiUrl = "https://script.google.com/macros/s/AKfycbwi3zCFKVzhxIvjISN27XYwRJqIgaKI6URuDKv36-_rNbpCj_r9gP1bXKXVmeIdyO9CRQ/exec";
+const apiUrl = "https://script.google.com/macros/s/AKfycbz31-KfNRm9osWarfQqDli7q9uX8fTPT60Uz8ugIvQUaHAVUEjogl3tqYeS4WLKooXisw/exec";
 
 console.log(apiUrl);
 
