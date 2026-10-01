@@ -34,7 +34,9 @@ class QueueHandler
     {
         this.queue = this.load();
         this.processing = false;
+        this.reading = false;
         this.retryTimer = null;
+        this.fetchAfterQueue = false;
     }
 
     load()
@@ -92,6 +94,8 @@ class QueueHandler
         this.queue.push(item);
         this.save();
 
+        rankingSynced = false;
+
         addQueueLog(
             `Toegevoegd aan wachtrij: ${item.payload.action}`
         );
@@ -106,7 +110,9 @@ class QueueHandler
     remove(id)
     {
         this.queue =
-            this.queue.filter(item => item.id !== id);
+            this.queue.filter(
+                item => item.id !== id
+            );
 
         this.save();
 
@@ -115,7 +121,7 @@ class QueueHandler
 
     async process()
     {
-        if (this.processing)
+        if (this.processing || this.reading)
         {
             return;
         }
@@ -170,8 +176,6 @@ class QueueHandler
                     );
 
                     this.remove(item.id);
-
-                    await loadPlayers(true);
                 }
                 catch (error)
                 {
@@ -210,6 +214,12 @@ class QueueHandler
             else
             {
                 renderQueueInfo();
+
+                if (this.fetchAfterQueue)
+                {
+                    this.fetchAfterQueue = false;
+                    this.requestRead(true);
+                }
             }
         }
     }
@@ -221,36 +231,63 @@ class QueueHandler
             return;
         }
 
-        const delay = this.getRetryDelay();
+        const delay = 5000;
 
         addQueueLog(
             `Retry over ${Math.round(delay / 1000)}s`
         );
 
-        this.retryTimer = setTimeout(() =>
-        {
-            this.retryTimer = null;
-            this.process();
-        }, delay);
+        this.retryTimer =
+            setTimeout(
+                () =>
+                {
+                    this.retryTimer = null;
+                    this.process();
+                },
+                delay
+            );
     }
 
-    getRetryDelay()
+    async requestRead(background = false)
     {
-        if (!this.queue.length)
+        if (this.processing || this.reading)
         {
-            return 5000;
+            if (this.queue.length)
+            {
+                this.fetchAfterQueue = true;
+            }
+
+            return;
         }
 
-        const attempts =
-            Number(this.queue[0].attempts) || 0;
+        if (this.queue.length)
+        {
+            this.fetchAfterQueue = true;
 
-        if (attempts <= 1) return 5000;
-        if (attempts <= 2) return 15000;
-        if (attempts <= 3) return 30000;
-        if (attempts <= 4) return 60000;
-        if (attempts <= 5) return 120000;
+            addQueueLog(
+                "Ophalen overgeslagen: wachtrij bevat writes"
+            );
 
-        return 300000;
+            this.process();
+
+            return;
+        }
+
+        this.reading = true;
+
+        try
+        {
+            await loadPlayers(background);
+        }
+        finally
+        {
+            this.reading = false;
+
+            if (this.queue.length)
+            {
+                this.process();
+            }
+        }
     }
 
     start()
@@ -681,17 +718,20 @@ function startHold(name)
     holdPlayer = name;
 
     holdTimer =
-        setTimeout(() =>
-        {
-            setCookie(
-                "playerName",
-                holdPlayer
-            );
+        setTimeout(
+            () =>
+            {
+                setCookie(
+                    "playerName",
+                    holdPlayer
+                );
 
-            holdPlayer = null;
+                holdPlayer = null;
 
-            render();
-        }, 400);
+                render();
+            },
+            400
+        );
 }
 
 function cancelHold()
@@ -968,6 +1008,129 @@ async function loadPlayers(background = false)
     }
 }
 
+function updateCachedScore(
+    playerName,
+    points
+)
+{
+    const data =
+        dataCache.get();
+
+    if (!data)
+    {
+        return;
+    }
+
+    const updateRows =
+        rows =>
+        {
+            if (
+                !Array.isArray(rows) ||
+                rows.length < 2
+            )
+            {
+                return;
+            }
+
+            const row =
+                rows
+                    .slice(1)
+                    .find(
+                        r =>
+                            r &&
+                            r[0] === playerName
+                    );
+
+            if (!row)
+            {
+                return;
+            }
+
+            const currentPoints =
+                Number(row[4]) || 0;
+
+            const currentGames =
+                Number(row[2]) || 0;
+
+            const currentWins =
+                Number(row[3]) || 0;
+
+            const currentScore =
+                Number(row[1]) || 0;
+
+            row[4] =
+                currentPoints + points;
+
+            row[2] =
+                currentGames + 1;
+
+            row[3] =
+                currentWins + (
+                    points === 0
+                        ? 1
+                        : 0
+                );
+
+            row[1] =
+                (
+                    row[4] /
+                    row[2]
+                ).toFixed(1);
+
+            row[5] =
+                new Date().toISOString();
+
+            return true;
+        };
+
+    updateRows(data.members);
+    updateRows(data.guests);
+
+    dataCache.save(data);
+
+    applyRankingData(data);
+}
+
+function updateCachedPlayer(
+    name,
+    points
+)
+{
+    const data =
+        dataCache.get();
+
+    if (!data)
+    {
+        return;
+    }
+
+    if (
+        !Array.isArray(data.members) ||
+        data.members.length === 0
+    )
+    {
+        return;
+    }
+
+    const timestamp =
+        new Date().toISOString();
+
+    data.members.push(
+        [
+            name,
+            Number(points),
+            0,
+            0,
+            Number(points),
+            timestamp
+        ]
+    );
+
+    dataCache.save(data);
+
+    applyRankingData(data);
+}
+
 function render()
 {
     const main =
@@ -1217,6 +1380,11 @@ async function saveScore()
         ]
     };
 
+    updateCachedScore(
+        selectedPlayer,
+        punten
+    );
+
     queueHandler.add(
     {
         id: key,
@@ -1291,6 +1459,11 @@ async function savePlayer()
         points: punten
     };
 
+    updateCachedPlayer(
+        naam,
+        punten
+    );
+
     queueHandler.add(
     {
         id: playerId,
@@ -1351,14 +1524,15 @@ function parsePunten(input)
 }
 
 queueHandler.start();
-loadPlayers();
+
+queueHandler.requestRead();
 
 setInterval(
     () =>
     {
         if (!document.hidden)
         {
-            loadPlayers(true);
+            queueHandler.requestRead(true);
         }
     },
     30000
@@ -1370,7 +1544,7 @@ document.addEventListener(
     {
         if (!document.hidden)
         {
-            loadPlayers(true);
+            queueHandler.requestRead(true);
         }
     }
 );
