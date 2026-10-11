@@ -11,6 +11,8 @@ const apiUrl = "https://script.google.com/macros/s/AKfycbxi8p0xdQ6D82aU8t5OX7Otz
 
 console.log(apiUrl);
 
+cont pollingInterval = 60000;
+
 const rankingCacheKey = "rummiklub_ranking_cache";
 const queueStorageKey = "rummiklub_submit_queue";
 
@@ -1536,7 +1538,7 @@ setInterval(
             queueHandler.requestRead(true);
         }
     },
-    30000
+    pollingInterval
 );
 
 document.addEventListener(
